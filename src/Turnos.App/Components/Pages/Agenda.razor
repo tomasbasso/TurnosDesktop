@@ -7,7 +7,7 @@
 @inject TurnosDbContext Contexto
 @inject EstadoApp Estado
 
-<div class="flex min-h-0 flex-1 flex-col">
+<div class="relative flex min-h-0 flex-1 flex-col">
 
     <div class="flex shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-4 py-2">
         <button class="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100" @onclick="SemanaAnterior">‹</button>
@@ -29,6 +29,14 @@
         <ModalTurno Turno="turnoEnEdicion"
                     AlGuardar="AlGuardarTurno"
                     AlCerrar="@(() => turnoEnEdicion = null)" />
+    }
+
+    @if (turnoSeleccionado is not null)
+    {
+        <PanelTurno Turno="turnoSeleccionado"
+                    AlCambiar="AlCambiarTurno"
+                    AlCerrar="@(() => turnoSeleccionado = null)"
+                    AlEditar="EditarSeleccionado" />
     }
 </div>
 
@@ -92,8 +100,20 @@
         return Task.CompletedTask;
     }
 
+    private Turno? turnoSeleccionado;
+
     private Task AlClickEnTurno(Turno turno)
     {
+        turnoSeleccionado = turno;
+        return Task.CompletedTask;
+    }
+
+    private async Task AlCambiarTurno() => await CargarSemana();
+
+    private void EditarSeleccionado()
+    {
+        var turno = turnoSeleccionado!;
+        turnoSeleccionado = null;
         turnoEnEdicion = new Turno
         {
             Id = turno.Id,
@@ -107,7 +127,6 @@
             Observaciones = turno.Observaciones,
             NotaClinica = turno.NotaClinica
         };
-        return Task.CompletedTask;
     }
 
     private async Task AlGuardarTurno()

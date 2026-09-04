@@ -1,0 +1,11 @@
+<button class="rounded-lg px-2 py-2 text-xs font-medium transition @(Activo ? $"{Clase} text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200")"
+        @onclick="AlHacerClick">
+    @Etiqueta
+</button>
+
+@code {
+    [Parameter, EditorRequired] public string Etiqueta { get; set; } = string.Empty;
+    [Parameter] public bool Activo { get; set; }
+    [Parameter, EditorRequired] public string Clase { get; set; } = string.Empty;
+    [Parameter] public EventCallback AlHacerClick { get; set; }
+}
