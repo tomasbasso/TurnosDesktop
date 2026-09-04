@@ -90,11 +90,22 @@ saber qué franja dibujar.
 | Telefono | string? | |
 | Email | string? | |
 | FechaNacimiento | DateOnly? | |
+| ObraSocial | string? | texto libre, no catálogo |
+| NumeroAfiliado | string? | |
 | Observaciones | string? | permanente: alergias, antecedentes, limitaciones |
 | Activo | bool | |
 | CreadoEl | DateTime | |
 
 Índice en `(Apellido, Nombre)` y en `Dni` para el autocomplete.
+
+La obra social es **texto libre y no una tabla catálogo**. Un catálogo obligaría
+a mantener un ABM de obras sociales antes de poder dar de alta al primer
+paciente. En su lugar, el formulario ofrece un `datalist` con los valores ya
+cargados (`SELECT DISTINCT ObraSocial`), lo que da consistencia sin ABM. Si con
+el tiempo justifica normalizarse, se migra con el esquema de §8.
+
+Las sesiones que autoriza la obra social no van acá: viven en
+`Tratamiento.SesionesAutorizadas`.
 
 ### Tratamiento
 
@@ -384,7 +395,8 @@ Ninguno de estos requiere cambios al modelo de datos de §5 más allá de column
 nuevas:
 
 - Reportes: historia clínica a PDF (QuestPDF), agenda y caja a Excel (ClosedXML)
-- Obras sociales: catálogo, número de afiliado, sesiones autorizadas por la obra
+- Obras sociales: normalizar a tabla catálogo si el texto libre se vuelve
+  inmanejable (el campo en `Paciente` ya existe desde la v1)
 - Recordatorio de turno por WhatsApp, disparando la app instalada
 - Escalas clínicas medibles por sesión (dolor EVA, rango articular) y sus gráficos
 - Adjuntos por sesión (estudios, fotos)
