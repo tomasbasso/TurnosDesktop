@@ -1,0 +1,98 @@
+@using Turnos.Core.Entidades
+@using Turnos.Data.Servicios
+@inject IPacienteService PacienteServicio
+
+<div class="space-y-3">
+    <div class="grid grid-cols-2 gap-3">
+        <label class="block">
+            <span class="mb-1 block text-xs font-medium text-slate-600">Apellido *</span>
+            <input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                   @bind="Paciente.Apellido" @bind:event="oninput" />
+        </label>
+        <label class="block">
+            <span class="mb-1 block text-xs font-medium text-slate-600">Nombre *</span>
+            <input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                   @bind="Paciente.Nombre" @bind:event="oninput" />
+        </label>
+        <label class="block">
+            <span class="mb-1 block text-xs font-medium text-slate-600">DNI</span>
+            <input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                   @bind="Paciente.Dni" />
+        </label>
+        <label class="block">
+            <span class="mb-1 block text-xs font-medium text-slate-600">Teléfono</span>
+            <input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                   @bind="Paciente.Telefono" />
+        </label>
+        <label class="block">
+            <span class="mb-1 block text-xs font-medium text-slate-600">Obra social</span>
+            <input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                   list="obras-sociales" @bind="Paciente.ObraSocial" />
+            <datalist id="obras-sociales">
+                @foreach (var obra in obrasSociales)
+                {
+                    <option value="@obra" />
+                }
+            </datalist>
+        </label>
+        <label class="block">
+            <span class="mb-1 block text-xs font-medium text-slate-600">N° de afiliado</span>
+            <input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                   @bind="Paciente.NumeroAfiliado" />
+        </label>
+    </div>
+
+    <label class="block">
+        <span class="mb-1 block text-xs font-medium text-slate-600">
+            Observaciones <span class="font-normal text-slate-400">— alergias, antecedentes, limitaciones</span>
+        </span>
+        <textarea rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  @bind="Paciente.Observaciones"></textarea>
+    </label>
+
+    @if (mensaje is not null)
+    {
+        <p class="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">@mensaje</p>
+    }
+
+    <div class="flex justify-end gap-2 pt-1">
+        <button class="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100"
+                @onclick="AlCancelar">Cancelar</button>
+        <button class="rounded-lg bg-marca-600 px-4 py-2 text-sm font-medium text-white hover:bg-marca-700"
+                @onclick="Guardar" disabled="@guardando">Guardar</button>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Paciente Paciente { get; set; } = new();
+    [Parameter] public EventCallback<Paciente> AlGuardar { get; set; }
+    [Parameter] public EventCallback AlCancelar { get; set; }
+
+    private List<string> obrasSociales = [];
+    private string? mensaje;
+    private bool guardando;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resultado = await PacienteServicio.ObrasSocialesUsadasAsync();
+        if (resultado.Success) obrasSociales = resultado.Data!;
+    }
+
+    private async Task Guardar()
+    {
+        guardando = true;
+        mensaje = null;
+
+        var resultado = await PacienteServicio.GuardarAsync(Paciente);
+
+        guardando = false;
+
+        if (!resultado.Success)
+        {
+            mensaje = resultado.Message;
+            return;
+        }
+
+        await AlGuardar.InvokeAsync(resultado.Data!);
+    }
+}
