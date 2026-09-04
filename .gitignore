@@ -43,6 +43,9 @@ npm-debug.log*
 *.db-wal
 backups/
 
+## Workspace de superpowers (ledgers, briefs, reportes de subagentes)
+.superpowers/
+
 ## Sistema operativo
 Thumbs.db
 ehthumbs.db
