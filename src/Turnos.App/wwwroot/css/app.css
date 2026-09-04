@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@source "../../Components/**/*.razor";
+@source "../../*.razor";
+
+@theme {
+  --color-marca-50:  #eff6ff;
+  --color-marca-100: #dbeafe;
+  --color-marca-500: #3b82f6;
+  --color-marca-600: #2563eb;
+  --color-marca-700: #1d4ed8;
+
+  --color-estado-programado: #3b82f6;
+  --color-estado-atendido:   #22c55e;
+  --color-estado-ausente:    #f59e0b;
+  --color-estado-cancelado:  #9ca3af;
+}
+
+html, body {
+  height: 100%;
+  overscroll-behavior: none;
+}
