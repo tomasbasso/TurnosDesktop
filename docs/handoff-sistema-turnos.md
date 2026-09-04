@@ -1,6 +1,6 @@
 # Handoff — Sistema de turnos de kinesiología
 
-Última actualización: 2026-09-04. Repo: https://github.com/tomasbasso/TurnosDesktop (branch `main`).
+Última actualización: 2026-09-04 (Fase 1 completa y pusheada). Repo: https://github.com/tomasbasso/TurnosDesktop (branch `main`).
 
 ## Objetivo
 
@@ -67,44 +67,69 @@ de implementación; cada fase entrega software usable por su cuenta.
 
 ## Archivos tocados
 
-Todo lo que existe hoy es documentación y configuración. **No hay una sola línea
-de C# escrita.**
+La Fase 1 completa está implementada: solución de cuatro proyectos, backend
+completo (entidades, EF Core, `PacienteService`, `TurnoService`) y la app MAUI
+Blazor (agenda, pacientes, backup, ajustes). Ver `src/` y `tests/`.
 
 ```
-.gitignore                                                    .NET/MAUI + *.db + backups/ + node_modules/
+.gitignore                                                    .NET/MAUI + *.db + backups/ + node_modules/ + .superpowers/
 docs/superpowers/specs/2026-09-04-sistema-turnos-kinesiologia-design.md
 docs/superpowers/plans/2026-09-04-fase1-fundaciones-y-agenda.md
 docs/handoff-sistema-turnos.md                                este archivo
+src/Turnos.Core/, src/Turnos.Data/, src/Turnos.App/            implementados (Fase 1)
+tests/Turnos.Tests/                                            36/36 tests en verde
 ```
 
-Sin trackear: `ezequiel_tosso_foto_perfil.png` en la raíz. No se decidió qué es —
-puede ser el avatar del profesional o haberse colado. Preguntar antes de moverlo o
-borrarlo.
+Resuelto: `ezequiel_tosso_foto_perfil.png` en la raíz era la foto de perfil de
+Ezequiel. Se copió a `src/Turnos.App/wwwroot/images/profesionales/ezequiel-tosso.png`
+y se agregó `Profesional.FotoPerfil` (columna nueva vía evolución de esquema) para
+mostrarla como avatar junto al selector de profesional. El archivo original en la
+raíz sigue sin trackear — queda ahí por si se quiere conservar la fuente; se puede
+borrar sin perder nada, ya está copiado adentro del proyecto.
 
 ## Estado actual
 
 ```
-06815fa  Agregar plan de implementacion de la Fase 1 y obra social en Paciente
-cf7216e  Agregar spec de diseno del sistema de turnos
+dec1afe  Corregir perdida de nota clinica, error UI sin estilo, excepciones sin
+         capturar, edicion de pacientes sin copia y refresco de agenda al cambiar
+         de profesional
+...      (15 commits de la Fase 1, ver git log 536822b..dec1afe)
 ```
 
-- Spec: **aprobada por el usuario** ("el spect esta bien"), auto-revisada, sin TBDs.
-- Plan Fase 1: escrito, auto-revisado, 12 tareas con código real en cada paso.
-- Planes de Fases 2 y 3: **no escritos**. Se escriben cuando la fase anterior cierre.
-- Código: no empezado.
+- Spec: aprobada por el usuario, sin TBDs.
+- Plan Fase 1: **ejecutado completo y pusheado a `origin/main`.**
+- Planes de Fases 2 y 3: **no escritos**. Se escriben cuando toque.
+- Código: Fase 1 completa. 36/36 tests pasando, build de `Turnos.App` limpio.
+- Ejecución: `superpowers:subagent-driven-development` — 12 tareas, cada una con
+  implementador + revisión propia, más una revisión final de toda la rama que
+  encontró y corrigió un bug crítico (ver "Trampas conocidas").
 
-Estamos parados justo antes de la Task 1 del Plan 1.
+## Dos cosas pendientes de decisión/trabajo antes de la Fase 2
+
+1. **Decisión de producto sin resolver**: el spec pedía que los turnos cancelados
+   se vean tachados en la grilla; el plan (autoridad de esta fase) los oculta por
+   completo. Se implementó fiel al plan — significa que **cancelar un turno es
+   irreversible desde la UI hoy**. Preguntarle a Tomás/Ezequiel si eso es lo que
+   quieren antes de que la Fase 2 toque esta zona.
+2. **Gap conocido, hoy inalcanzable**: al cambiar el profesional activo,
+   `Agenda.razor` recarga los turnos pero no el horario de agenda
+   (`HoraInicioAgenda`/`HoraFinAgenda`) del profesional nuevo. No se puede
+   disparar todavía porque solo existe un profesional sembrado (Ezequiel Tosso) y
+   la Fase 1 no tiene alta de profesionales. Arreglarlo cuando se agregue
+   soporte multi-profesional: el handler de `Estado.Cambio` en `Agenda.razor`
+   debe releer también esas dos horas, no solo los turnos.
 
 ## Próximos pasos
 
-1. **Decisión pendiente del usuario**: cómo ejecutar el Plan 1 —
-   `superpowers:subagent-driven-development` (un subagente fresco por tarea, revisión
-   entre tareas) o `superpowers:executing-plans` (en la sesión, por lotes con
-   checkpoints). Se le ofreció y todavía no eligió.
-2. Ejecutar las 12 tareas del Plan 1 en orden. Cada una termina en commit propio.
-3. Cerrar la Fase 1 con el recorrido manual completo que está al final del plan.
-4. Escribir el Plan 2 (tratamientos, series recurrentes, historia clínica) con
+1. Confirmar con el usuario la decisión de producto pendiente (arriba).
+2. Escribir el Plan 2 (tratamientos, series recurrentes, historia clínica) con
    `superpowers:writing-plans`, usando la misma spec.
+3. Considerar, para la Fase 2, migrar `TurnosDbContext` de inyección directa a
+   `IDbContextFactory<TurnosDbContext>` — el registro Transient actual es
+   correcto para el change tracker, pero en Blazor Hybrid (un solo scope de DI
+   para toda la vida de la app) los contextos nunca se disponen. Techo práctico
+   bajo (unos MB), no es urgente, pero conviene resolverlo antes de que la Fase 2
+   sume más pantallas que inyecten el contexto directo.
 
 ## Trampas conocidas
 
@@ -147,3 +172,16 @@ GitHub, o instalarlo primero.
 **Identidad de git**: commitea como `tomasbasso <tomas.basso@hotmail.com>`, que no es
 el mail de la cuenta de Claude Code. Si se quiere el de GitHub, cambiarlo antes de
 la primera tanda de commits de código.
+
+**Cuidado al pasar un `Turno` (u otra entidad) entre componentes Razor sin copiar.**
+La Fase 1 tuvo un bug crítico (corregido en `dec1afe`) donde `PanelTurno` guardaba
+la nota clínica en la base pero no actualizaba el objeto `Turno` en memoria; al
+recargar la grilla y editar ese mismo turno después, se pisaba la nota real con el
+valor viejo. Pasó porque tres componentes de tareas distintas (`TurnoService`,
+`CalendarioSemanal`/`Agenda`, `PanelTurno`) compartían la misma instancia sin que
+ninguna revisión de tarea individual pudiera verlo — solo apareció en la revisión
+final de toda la rama, trazando el flujo real de un usuario. Regla: cualquier
+componente que edita una entidad debe copiarla al empezar a editar, y cualquier
+código que guarda cambios debe sincronizar el objeto en memoria o forzar un
+re-fetch antes de que otro componente lo vuelva a leer. `Agenda.EditarSeleccionado`
+y `Pacientes.razor` (tras el fix) hacen esto bien; es el patrón a copiar.
