@@ -33,6 +33,7 @@ public static class MauiProgram
         builder.Services.AddTransient<DatabaseInitializer>();
         builder.Services.AddTransient<IPacienteService, PacienteService>();
         builder.Services.AddTransient<ITurnoService, TurnoService>();
+        builder.Services.AddTransient<IBackupService, BackupService>();
         builder.Services.AddSingleton<EstadoApp>();
 
 #if DEBUG
@@ -46,6 +47,23 @@ public static class MauiProgram
         {
             var inicializador = alcance.ServiceProvider.GetRequiredService<DatabaseInitializer>();
             inicializador.InicializarAsync().GetAwaiter().GetResult();
+        }
+
+        using (var alcance = app.Services.CreateScope())
+        {
+            var estado = alcance.ServiceProvider.GetRequiredService<EstadoApp>();
+            if (estado.UltimoBackupAutomatico.Date < DateTime.Today)
+            {
+                var backup = alcance.ServiceProvider.GetRequiredService<IBackupService>();
+                var carpeta = Path.Combine(FileSystem.AppDataDirectory, "backups");
+
+                var resultado = backup.CopiarAsync(carpeta).GetAwaiter().GetResult();
+                if (resultado.Success)
+                {
+                    backup.PurgarAntiguosAsync(carpeta).GetAwaiter().GetResult();
+                    estado.UltimoBackupAutomatico = DateTime.Now;
+                }
+            }
         }
 
         return app;
