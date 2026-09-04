@@ -1,0 +1,51 @@
+## .NET
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+.vs/
+.vscode/
+*.binlog
+
+## Rider / VS
+.idea/
+_ReSharper*/
+*.DotSettings.user
+
+## MAUI / Android
+*.apk
+*.aab
+*.keystore
+*.jks
+Resources/Raw/*.tmp
+
+## Publicación
+[Dd]ebug/
+[Rr]elease/
+[Pp]ublish/
+artifacts/
+*.nupkg
+*.snupkg
+
+## Node / Tailwind
+node_modules/
+npm-debug.log*
+**/wwwroot/css/app.min.css
+
+## Base de datos y backups locales
+*.db
+*.db-shm
+*.db-wal
+backups/
+
+## Sistema operativo
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
