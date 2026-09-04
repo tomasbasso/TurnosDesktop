@@ -1,0 +1,34 @@
+@using Microsoft.EntityFrameworkCore
+@using Turnos.Core.Entidades
+@using Turnos.Data
+@inject TurnosDbContext Contexto
+@inject EstadoApp Estado
+
+<select class="rounded-lg border border-marca-100 bg-white px-3 py-1.5 text-sm font-medium text-slate-700"
+        value="@Estado.ProfesionalActivoId"
+        @onchange="AlCambiar">
+    @foreach (var profesional in profesionales)
+    {
+        <option value="@profesional.Id">@profesional.Nombre</option>
+    }
+</select>
+
+@code {
+    private List<Profesional> profesionales = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        profesionales = await Contexto.Profesionales
+            .AsNoTracking().Where(p => p.Activo).OrderBy(p => p.Nombre).ToListAsync();
+
+        var activoSigueValido = profesionales.Any(p => p.Id == Estado.ProfesionalActivoId);
+        if (!activoSigueValido && profesionales.Count > 0)
+            Estado.ProfesionalActivoId = profesionales[0].Id;
+    }
+
+    private void AlCambiar(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+            Estado.ProfesionalActivoId = id;
+    }
+}

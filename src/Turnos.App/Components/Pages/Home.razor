@@ -1,5 +1,62 @@
-﻿@page "/"
+@page "/"
+@using Turnos.Core
+@using Turnos.Core.Entidades
+@using Turnos.Data.Servicios
+@inject ITurnoService TurnoServicio
+@inject EstadoApp Estado
+@inject NavigationManager Navegacion
 
-<h1>Hello, world!</h1>
+<div class="flex-1 overflow-auto p-6">
+    <div class="mx-auto max-w-3xl">
 
-Welcome to your new app.
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <Tarjeta Titulo="Turnos"  Icono="📅" Ruta="/agenda" />
+            <Tarjeta Titulo="Pacientes" Icono="👥" Ruta="/pacientes" />
+            <Tarjeta Titulo="Historia clínica" Icono="📋" Ruta="/historia" />
+            <Tarjeta Titulo="Caja" Icono="💵" Ruta="/caja" />
+            <Tarjeta Titulo="Ajustes" Icono="⚙️" Ruta="/config" />
+        </div>
+
+        <h2 class="mt-8 mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+            Hoy · @DateTime.Today.ToString("dddd d 'de' MMMM")
+        </h2>
+
+        @if (turnosDeHoy.Count == 0)
+        {
+            <p class="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-400">
+                No hay turnos cargados para hoy.
+            </p>
+        }
+        else
+        {
+            <ul class="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                @foreach (var turno in turnosDeHoy)
+                {
+                    <li class="flex items-center gap-4 px-4 py-3">
+                        <span class="w-14 text-sm font-semibold tabular-nums text-slate-700">
+                            @turno.Inicio.ToString("HH:mm")
+                        </span>
+                        <span class="flex-1 text-sm text-slate-800">
+                            @(turno.Paciente?.NombreCompleto ?? "—")
+                        </span>
+                        <span class="text-xs text-slate-400">@turno.DuracionMinutos min</span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Turno> turnosDeHoy = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var hoy = DateTime.Today;
+        var resultado = await TurnoServicio.ObtenerRangoAsync(
+            Estado.ProfesionalActivoId, hoy, hoy.AddDays(1));
+
+        if (resultado.Success)
+            turnosDeHoy = resultado.Data!.Where(t => t.Estado != EstadoTurno.Cancelado).ToList();
+    }
+}

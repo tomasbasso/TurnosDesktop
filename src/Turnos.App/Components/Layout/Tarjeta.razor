@@ -1,0 +1,13 @@
+@inject NavigationManager Navegacion
+
+<button class="flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-marca-500 hover:shadow-md"
+        @onclick="@(() => Navegacion.NavigateTo(Ruta))">
+    <span class="text-3xl">@Icono</span>
+    <span class="px-2 text-center text-sm font-medium text-slate-700">@Titulo</span>
+</button>
+
+@code {
+    [Parameter, EditorRequired] public string Titulo { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Icono { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Ruta { get; set; } = string.Empty;
+}
