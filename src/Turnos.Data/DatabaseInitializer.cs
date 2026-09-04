@@ -18,15 +18,13 @@ public class DatabaseInitializer(TurnosDbContext contexto)
 
     /// <summary>
     /// Cada columna agregada despues de la v1 se aplica aca, en orden y de forma
-    /// condicional. Ejemplo del patron a seguir:
-    ///
-    ///   if (!await ExisteColumnaAsync("Turnos", "MotivoCancelacion"))
-    ///       await EjecutarAsync("ALTER TABLE Turnos ADD COLUMN MotivoCancelacion TEXT");
-    ///
-    /// La v1 no tiene evoluciones todavia porque EnsureCreatedAsync ya crea el
-    /// esquema completo.
+    /// condicional.
     /// </summary>
-    private Task AplicarEvolucionesAsync() => Task.CompletedTask;
+    private async Task AplicarEvolucionesAsync()
+    {
+        if (!await ExisteColumnaAsync("Profesionales", "FotoPerfil"))
+            await EjecutarAsync("ALTER TABLE Profesionales ADD COLUMN FotoPerfil TEXT");
+    }
 
     public async Task<bool> ExisteColumnaAsync(string tabla, string columna)
     {
@@ -59,7 +57,8 @@ public class DatabaseInitializer(TurnosDbContext contexto)
             Color = "#2563eb",
             HoraInicioAgenda = new TimeOnly(7, 0),
             HoraFinAgenda = new TimeOnly(21, 0),
-            Activo = true
+            Activo = true,
+            FotoPerfil = "images/profesionales/ezequiel-tosso.png"
         });
         await contexto.SaveChangesAsync();
     }

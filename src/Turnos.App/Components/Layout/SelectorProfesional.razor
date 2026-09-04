@@ -4,17 +4,28 @@
 @inject TurnosDbContext Contexto
 @inject EstadoApp Estado
 
-<select class="rounded-lg border border-marca-100 bg-white px-3 py-1.5 text-sm font-medium text-slate-700"
-        value="@Estado.ProfesionalActivoId"
-        @onchange="AlCambiar">
-    @foreach (var profesional in profesionales)
+<div class="flex items-center gap-2">
+    @if (!string.IsNullOrWhiteSpace(ActivoSeleccionado?.FotoPerfil))
     {
-        <option value="@profesional.Id">@profesional.Nombre</option>
+        <img src="@ActivoSeleccionado.FotoPerfil"
+             alt="@ActivoSeleccionado.Nombre"
+             class="h-7 w-7 rounded-full object-cover" />
     }
-</select>
+    <select class="rounded-lg border border-marca-100 bg-white px-3 py-1.5 text-sm font-medium text-slate-700"
+            value="@Estado.ProfesionalActivoId"
+            @onchange="AlCambiar">
+        @foreach (var profesional in profesionales)
+        {
+            <option value="@profesional.Id">@profesional.Nombre</option>
+        }
+    </select>
+</div>
 
 @code {
     private List<Profesional> profesionales = [];
+
+    private Profesional? ActivoSeleccionado =>
+        profesionales.FirstOrDefault(p => p.Id == Estado.ProfesionalActivoId);
 
     protected override async Task OnInitializedAsync()
     {

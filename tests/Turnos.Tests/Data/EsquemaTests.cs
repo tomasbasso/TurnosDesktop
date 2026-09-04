@@ -19,6 +19,7 @@ public class EsquemaTests
         Assert.Equal(new TimeOnly(7, 0), profesional.HoraInicioAgenda);
         Assert.Equal(new TimeOnly(21, 0), profesional.HoraFinAgenda);
         Assert.True(profesional.Activo);
+        Assert.Equal("images/profesionales/ezequiel-tosso.png", profesional.FotoPerfil);
     }
 
     [Fact]
