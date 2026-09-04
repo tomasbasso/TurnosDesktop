@@ -23,6 +23,13 @@
                        MostrarDomingo="Estado.MostrarDomingo"
                        AlClickEnVacio="AlClickEnVacio"
                        AlClickEnTurno="AlClickEnTurno" />
+
+    @if (turnoEnEdicion is not null)
+    {
+        <ModalTurno Turno="turnoEnEdicion"
+                    AlGuardar="AlGuardarTurno"
+                    AlCerrar="@(() => turnoEnEdicion = null)" />
+    }
 </div>
 
 @code {
@@ -72,7 +79,40 @@
         return $"{lunes:dd/MM} – {fin:dd/MM/yyyy}";
     }
 
-    // La Task 10 reemplaza estos dos metodos para abrir el modal.
-    private Task AlClickEnVacio(DateTime momento) => Task.CompletedTask;
-    private Task AlClickEnTurno(Turno turno) => Task.CompletedTask;
+    private Turno? turnoEnEdicion;
+
+    private Task AlClickEnVacio(DateTime momento)
+    {
+        turnoEnEdicion = new Turno
+        {
+            ProfesionalId = Estado.ProfesionalActivoId,
+            Inicio = momento,
+            Fin = momento.AddMinutes(Estado.DuracionPorDefecto)
+        };
+        return Task.CompletedTask;
+    }
+
+    private Task AlClickEnTurno(Turno turno)
+    {
+        turnoEnEdicion = new Turno
+        {
+            Id = turno.Id,
+            ProfesionalId = turno.ProfesionalId,
+            PacienteId = turno.PacienteId,
+            TratamientoId = turno.TratamientoId,
+            Inicio = turno.Inicio,
+            Fin = turno.Fin,
+            Estado = turno.Estado,
+            SerieId = turno.SerieId,
+            Observaciones = turno.Observaciones,
+            NotaClinica = turno.NotaClinica
+        };
+        return Task.CompletedTask;
+    }
+
+    private async Task AlGuardarTurno()
+    {
+        turnoEnEdicion = null;
+        await CargarSemana();
+    }
 }

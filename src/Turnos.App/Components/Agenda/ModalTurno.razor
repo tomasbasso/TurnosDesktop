@@ -1,0 +1,117 @@
+@using Turnos.Core
+@using Turnos.Core.Entidades
+@using Turnos.Data.Servicios
+@inject ITurnoService TurnoServicio
+
+<div class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 p-4"
+     @onclick="() => AlCerrar.InvokeAsync()">
+
+    <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+         @onclick:stopPropagation="true">
+
+        <h2 class="mb-4 text-base font-semibold text-slate-800">
+            @(Turno.Id == 0 ? "Nuevo turno" : "Editar turno")
+        </h2>
+
+        <div class="space-y-3">
+            <div>
+                <span class="mb-1 block text-xs font-medium text-slate-600">Paciente *</span>
+                <BuscadorPaciente PacienteId="Turno.PacienteId"
+                                  PacienteSeleccionado="AlElegirPaciente" />
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+                <label class="col-span-2 block">
+                    <span class="mb-1 block text-xs font-medium text-slate-600">Fecha y hora</span>
+                    <input type="datetime-local"
+                           class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                           value="@Turno.Inicio.ToString("yyyy-MM-ddTHH:mm")"
+                           @onchange="AlCambiarInicio" />
+                </label>
+                <label class="block">
+                    <span class="mb-1 block text-xs font-medium text-slate-600">Duración</span>
+                    <select class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            value="@duracion" @onchange="AlCambiarDuracion">
+                        <option value="30">30 min</option>
+                        <option value="40">40 min</option>
+                        <option value="45">45 min</option>
+                        <option value="60">60 min</option>
+                    </select>
+                </label>
+            </div>
+
+            <label class="block">
+                <span class="mb-1 block text-xs font-medium text-slate-600">Observaciones</span>
+                <input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                       placeholder="viene con la orden, primera vez, etc."
+                       @bind="Turno.Observaciones" />
+            </label>
+
+            @if (mensaje is not null)
+            {
+                <p class="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">@mensaje</p>
+            }
+
+            <div class="flex justify-end gap-2 pt-1">
+                <button class="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100"
+                        @onclick="() => AlCerrar.InvokeAsync()">Cancelar</button>
+                <button class="rounded-lg bg-marca-600 px-4 py-2 text-sm font-medium text-white hover:bg-marca-700"
+                        @onclick="Guardar" disabled="@guardando">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Turno Turno { get; set; } = new();
+    [Parameter] public EventCallback AlGuardar { get; set; }
+    [Parameter] public EventCallback AlCerrar { get; set; }
+
+    private int duracion = 30;
+    private string? mensaje;
+    private bool guardando;
+
+    protected override void OnParametersSet()
+    {
+        if (Turno.Fin > Turno.Inicio) duracion = Turno.DuracionMinutos;
+    }
+
+    private void AlElegirPaciente(Paciente paciente) => Turno.PacienteId = paciente.Id;
+
+    private void AlCambiarInicio(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var nuevo))
+        {
+            Turno.Inicio = nuevo;
+            Turno.Fin = nuevo.AddMinutes(duracion);
+        }
+    }
+
+    private void AlCambiarDuracion(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var minutos))
+        {
+            duracion = minutos;
+            Turno.Fin = Turno.Inicio.AddMinutes(minutos);
+        }
+    }
+
+    private async Task Guardar()
+    {
+        guardando = true;
+        mensaje = null;
+
+        Turno.Fin = Turno.Inicio.AddMinutes(duracion);
+        var resultado = await TurnoServicio.GuardarAsync(Turno);
+
+        guardando = false;
+
+        if (!resultado.Success)
+        {
+            mensaje = resultado.Message;
+            return;
+        }
+
+        await AlGuardar.InvokeAsync();
+    }
+}
