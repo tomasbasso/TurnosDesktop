@@ -1,4 +1,5 @@
 @page "/agenda"
+@implements IDisposable
 @using Microsoft.EntityFrameworkCore
 @using Turnos.Core.Entidades
 @using Turnos.Data
@@ -60,7 +61,20 @@
         }
 
         await CargarSemana();
+
+        Estado.Cambio += AlCambiarProfesional;
     }
+
+    private async void AlCambiarProfesional()
+    {
+        await InvokeAsync(async () =>
+        {
+            await CargarSemana();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose() => Estado.Cambio -= AlCambiarProfesional;
 
     private static DateOnly LunesDe(DateOnly fecha)
     {
@@ -108,7 +122,12 @@
         return Task.CompletedTask;
     }
 
-    private async Task AlCambiarTurno() => await CargarSemana();
+    private async Task AlCambiarTurno()
+    {
+        await CargarSemana();
+        if (turnoSeleccionado is not null)
+            turnoSeleccionado = turnos.FirstOrDefault(t => t.Id == turnoSeleccionado.Id);
+    }
 
     private void EditarSeleccionado()
     {

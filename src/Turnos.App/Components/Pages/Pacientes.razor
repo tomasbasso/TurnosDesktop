@@ -30,7 +30,7 @@
             @foreach (var paciente in pacientes)
             {
                 <li class="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-slate-50"
-                    @onclick="@(() => enEdicion = paciente)">
+                    @onclick="@(() => Editar(paciente))">
                     <span class="flex-1 text-sm font-medium text-slate-800">@paciente.NombreCompleto</span>
                     @if (!string.IsNullOrWhiteSpace(paciente.ObraSocial))
                     {
@@ -59,6 +59,22 @@
     }
 
     private void NuevoPaciente() => enEdicion = new Paciente();
+
+    private void Editar(Paciente paciente) => enEdicion = new Paciente
+    {
+        Id = paciente.Id,
+        Nombre = paciente.Nombre,
+        Apellido = paciente.Apellido,
+        Dni = paciente.Dni,
+        Telefono = paciente.Telefono,
+        Email = paciente.Email,
+        FechaNacimiento = paciente.FechaNacimiento,
+        ObraSocial = paciente.ObraSocial,
+        NumeroAfiliado = paciente.NumeroAfiliado,
+        Observaciones = paciente.Observaciones,
+        Activo = paciente.Activo,
+        CreadoEl = paciente.CreadoEl
+    };
 
     private async Task AlGuardarPaciente(Paciente _)
     {

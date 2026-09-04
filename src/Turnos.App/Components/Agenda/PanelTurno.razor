@@ -67,9 +67,16 @@
 
     private async Task Cambiar(EstadoTurno estado)
     {
-        await TurnoServicio.CambiarEstadoAsync(Turno.Id, estado);
-        Turno.Estado = estado;
-        mensaje = null;
+        var resultado = await TurnoServicio.CambiarEstadoAsync(Turno.Id, estado);
+        if (resultado.Success)
+        {
+            Turno.Estado = estado;
+            mensaje = null;
+        }
+        else
+        {
+            mensaje = resultado.Message;
+        }
         await AlCambiar.InvokeAsync();
     }
 
@@ -77,6 +84,8 @@
     {
         var resultado = await TurnoServicio.GuardarNotaClinicaAsync(Turno.Id, nota);
         mensaje = resultado.Success ? "Guardada." : resultado.Message;
+        if (resultado.Success)
+            Turno.NotaClinica = string.IsNullOrWhiteSpace(nota) ? null : nota.Trim();
         await AlCambiar.InvokeAsync();
     }
 }

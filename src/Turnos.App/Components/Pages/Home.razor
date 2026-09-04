@@ -1,4 +1,5 @@
 @page "/"
+@implements IDisposable
 @using Turnos.Core
 @using Turnos.Core.Entidades
 @using Turnos.Data.Servicios
@@ -52,6 +53,13 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await CargarTurnosDeHoy();
+
+        Estado.Cambio += AlCambiarProfesional;
+    }
+
+    private async Task CargarTurnosDeHoy()
+    {
         var hoy = DateTime.Today;
         var resultado = await TurnoServicio.ObtenerRangoAsync(
             Estado.ProfesionalActivoId, hoy, hoy.AddDays(1));
@@ -59,4 +67,15 @@
         if (resultado.Success)
             turnosDeHoy = resultado.Data!.Where(t => t.Estado != EstadoTurno.Cancelado).ToList();
     }
+
+    private async void AlCambiarProfesional()
+    {
+        await InvokeAsync(async () =>
+        {
+            await CargarTurnosDeHoy();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose() => Estado.Cambio -= AlCambiarProfesional;
 }

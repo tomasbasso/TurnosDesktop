@@ -12,7 +12,7 @@ public partial class App : Application
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		var window = new Window(new MainPage()) { Title = "Turnos.App" };
+		var window = new Window(new MainPage()) { Title = "Turnos — Kinesiología" };
 
 		window.Destroying += (_, _) =>
 		{

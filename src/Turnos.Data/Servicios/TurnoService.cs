@@ -9,13 +9,20 @@ public class TurnoService(TurnosDbContext contexto) : ITurnoService
 {
     public async Task<Result<List<Turno>>> ObtenerRangoAsync(int profesionalId, DateTime desde, DateTime hasta)
     {
-        var turnos = await contexto.Turnos.AsNoTracking()
-            .Include(t => t.Paciente)
-            .Where(t => t.ProfesionalId == profesionalId && t.Inicio >= desde && t.Inicio < hasta)
-            .OrderBy(t => t.Inicio)
-            .ToListAsync();
+        try
+        {
+            var turnos = await contexto.Turnos.AsNoTracking()
+                .Include(t => t.Paciente)
+                .Where(t => t.ProfesionalId == profesionalId && t.Inicio >= desde && t.Inicio < hasta)
+                .OrderBy(t => t.Inicio)
+                .ToListAsync();
 
-        return Result<List<Turno>>.Ok(turnos);
+            return Result<List<Turno>>.Ok(turnos);
+        }
+        catch (Exception ex)
+        {
+            return Result<List<Turno>>.Fail($"No se pudieron obtener los turnos: {ex.Message}");
+        }
     }
 
     public async Task<Result<Turno>> GuardarAsync(Turno turno)
@@ -26,22 +33,29 @@ public class TurnoService(TurnosDbContext contexto) : ITurnoService
         if (turno.PacienteId == 0)
             return Result<Turno>.Fail("Hay que elegir un paciente.");
 
-        var conflicto = await BuscarConflictoAsync(turno);
-        if (conflicto is not null)
+        try
         {
-            var quien = conflicto.Paciente is null
-                ? "otro turno"
-                : $"{conflicto.Paciente.Apellido}, {conflicto.Paciente.Nombre}";
+            var conflicto = await BuscarConflictoAsync(turno);
+            if (conflicto is not null)
+            {
+                var quien = conflicto.Paciente is null
+                    ? "otro turno"
+                    : $"{conflicto.Paciente.Apellido}, {conflicto.Paciente.Nombre}";
 
-            return Result<Turno>.Fail(
-                $"Se superpone con {quien}, {conflicto.Inicio:HH:mm}–{conflicto.Fin:HH:mm}.");
+                return Result<Turno>.Fail(
+                    $"Se superpone con {quien}, {conflicto.Inicio:HH:mm}–{conflicto.Fin:HH:mm}.");
+            }
+
+            if (turno.Id == 0) contexto.Turnos.Add(turno);
+            else contexto.Turnos.Update(turno);
+
+            await contexto.SaveChangesAsync();
+            return Result<Turno>.Ok(turno, "Turno guardado.");
         }
-
-        if (turno.Id == 0) contexto.Turnos.Add(turno);
-        else contexto.Turnos.Update(turno);
-
-        await contexto.SaveChangesAsync();
-        return Result<Turno>.Ok(turno, "Turno guardado.");
+        catch (Exception ex)
+        {
+            return Result<Turno>.Fail($"No se pudo guardar el turno: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -69,21 +83,35 @@ public class TurnoService(TurnosDbContext contexto) : ITurnoService
 
     public async Task<Result> CambiarEstadoAsync(int turnoId, EstadoTurno estado)
     {
-        var turno = await contexto.Turnos.FirstOrDefaultAsync(t => t.Id == turnoId);
-        if (turno is null) return Result.Fail("No se encontró el turno.");
+        try
+        {
+            var turno = await contexto.Turnos.FirstOrDefaultAsync(t => t.Id == turnoId);
+            if (turno is null) return Result.Fail("No se encontró el turno.");
 
-        turno.Estado = estado;
-        await contexto.SaveChangesAsync();
-        return Result.Ok("Estado actualizado.");
+            turno.Estado = estado;
+            await contexto.SaveChangesAsync();
+            return Result.Ok("Estado actualizado.");
+        }
+        catch (Exception ex)
+        {
+            return Result.Fail($"No se pudo cambiar el estado del turno: {ex.Message}");
+        }
     }
 
     public async Task<Result> GuardarNotaClinicaAsync(int turnoId, string? nota)
     {
-        var turno = await contexto.Turnos.FirstOrDefaultAsync(t => t.Id == turnoId);
-        if (turno is null) return Result.Fail("No se encontró el turno.");
+        try
+        {
+            var turno = await contexto.Turnos.FirstOrDefaultAsync(t => t.Id == turnoId);
+            if (turno is null) return Result.Fail("No se encontró el turno.");
 
-        turno.NotaClinica = string.IsNullOrWhiteSpace(nota) ? null : nota.Trim();
-        await contexto.SaveChangesAsync();
-        return Result.Ok("Nota guardada.");
+            turno.NotaClinica = string.IsNullOrWhiteSpace(nota) ? null : nota.Trim();
+            await contexto.SaveChangesAsync();
+            return Result.Ok("Nota guardada.");
+        }
+        catch (Exception ex)
+        {
+            return Result.Fail($"No se pudo guardar la nota clínica: {ex.Message}");
+        }
     }
 }
