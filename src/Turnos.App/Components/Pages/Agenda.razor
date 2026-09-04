@@ -1,0 +1,78 @@
+@page "/agenda"
+@using Microsoft.EntityFrameworkCore
+@using Turnos.Core.Entidades
+@using Turnos.Data
+@using Turnos.Data.Servicios
+@inject ITurnoService TurnoServicio
+@inject TurnosDbContext Contexto
+@inject EstadoApp Estado
+
+<div class="flex min-h-0 flex-1 flex-col">
+
+    <div class="flex shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-4 py-2">
+        <button class="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100" @onclick="SemanaAnterior">‹</button>
+        <button class="rounded-lg px-3 py-1 text-sm font-medium text-slate-600 hover:bg-slate-100" @onclick="IrAHoy">Hoy</button>
+        <button class="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100" @onclick="SemanaSiguiente">›</button>
+        <span class="ml-2 text-sm font-semibold text-slate-700">@Rotulo()</span>
+    </div>
+
+    <CalendarioSemanal Lunes="lunes"
+                       Turnos="turnos"
+                       HoraInicio="horaInicio"
+                       HoraFin="horaFin"
+                       MostrarDomingo="Estado.MostrarDomingo"
+                       AlClickEnVacio="AlClickEnVacio"
+                       AlClickEnTurno="AlClickEnTurno" />
+</div>
+
+@code {
+    private DateOnly lunes;
+    private List<Turno> turnos = [];
+    private TimeOnly horaInicio = new(7, 0);
+    private TimeOnly horaFin = new(21, 0);
+
+    protected override async Task OnInitializedAsync()
+    {
+        lunes = LunesDe(DateOnly.FromDateTime(DateTime.Today));
+
+        var profesional = await Contexto.Profesionales.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == Estado.ProfesionalActivoId);
+
+        if (profesional is not null)
+        {
+            horaInicio = profesional.HoraInicioAgenda;
+            horaFin = profesional.HoraFinAgenda;
+        }
+
+        await CargarSemana();
+    }
+
+    private static DateOnly LunesDe(DateOnly fecha)
+    {
+        var desplazamiento = ((int)fecha.DayOfWeek + 6) % 7;
+        return fecha.AddDays(-desplazamiento);
+    }
+
+    private async Task CargarSemana()
+    {
+        var desde = lunes.ToDateTime(TimeOnly.MinValue);
+        var resultado = await TurnoServicio.ObtenerRangoAsync(
+            Estado.ProfesionalActivoId, desde, desde.AddDays(7));
+
+        if (resultado.Success) turnos = resultado.Data!;
+    }
+
+    private async Task SemanaAnterior()  { lunes = lunes.AddDays(-7); await CargarSemana(); }
+    private async Task SemanaSiguiente() { lunes = lunes.AddDays(7);  await CargarSemana(); }
+    private async Task IrAHoy()          { lunes = LunesDe(DateOnly.FromDateTime(DateTime.Today)); await CargarSemana(); }
+
+    private string Rotulo()
+    {
+        var fin = lunes.AddDays(Estado.MostrarDomingo ? 6 : 5);
+        return $"{lunes:dd/MM} – {fin:dd/MM/yyyy}";
+    }
+
+    // La Task 10 reemplaza estos dos metodos para abrir el modal.
+    private Task AlClickEnVacio(DateTime momento) => Task.CompletedTask;
+    private Task AlClickEnTurno(Turno turno) => Task.CompletedTask;
+}

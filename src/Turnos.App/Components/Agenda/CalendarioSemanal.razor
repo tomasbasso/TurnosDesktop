@@ -1,0 +1,130 @@
+@using Turnos.Core
+@using Turnos.Core.Entidades
+
+<div class="flex min-h-0 flex-1 overflow-auto bg-white">
+
+    <div class="sticky left-0 z-10 w-14 shrink-0 border-r border-slate-200 bg-white">
+        <div style="height:@(CabeceraAlto)px"></div>
+        @foreach (var hora in Horas())
+        {
+            <div class="relative border-t border-slate-100" style="height:@(60 * Escala)px">
+                <span class="absolute -top-2 right-1 text-[10px] tabular-nums text-slate-400">
+                    @hora.ToString("HH:mm")
+                </span>
+            </div>
+        }
+    </div>
+
+    @foreach (var dia in Dias())
+    {
+        <div class="min-w-[110px] flex-1 border-r border-slate-200 last:border-r-0">
+
+            <div class="sticky top-0 z-10 flex flex-col items-center justify-center border-b border-slate-200 bg-white"
+                 style="height:@(CabeceraAlto)px">
+                <span class="text-[10px] uppercase tracking-wide text-slate-400">
+                    @dia.ToString("ddd")
+                </span>
+                <span class="text-sm font-semibold @(dia == DateTime.Today ? "text-marca-600" : "text-slate-700")">
+                    @dia.Day
+                </span>
+            </div>
+
+            <div class="relative" style="height:@(AltoTotal)px"
+                 @onclick="@(e => ClickEnVacio(dia, e))">
+
+                @foreach (var hora in Horas())
+                {
+                    <div class="pointer-events-none absolute inset-x-0 border-t border-slate-100"
+                         style="top:@(Desplazamiento(hora))px"></div>
+                }
+
+                @if (dia == DateTime.Today && AhoraVisible())
+                {
+                    <div class="pointer-events-none absolute inset-x-0 z-20 border-t-2 border-red-500"
+                         style="top:@(Desplazamiento(TimeOnly.FromDateTime(DateTime.Now)))px"></div>
+                }
+
+                @foreach (var turno in TurnosDe(dia))
+                {
+                    <div class="absolute inset-x-1 z-10 overflow-hidden rounded-md border-l-4 px-1.5 py-0.5 text-[11px] leading-tight shadow-sm @Clases(turno.Estado)"
+                         style="top:@(Desplazamiento(TimeOnly.FromDateTime(turno.Inicio)))px; height:@(Alto(turno))px"
+                         @onclick:stopPropagation="true"
+                         @onclick="@(() => AlClickEnTurno.InvokeAsync(turno))">
+                        <div class="font-semibold tabular-nums">@turno.Inicio.ToString("HH:mm")</div>
+                        <div class="truncate">@(turno.Paciente?.NombreCompleto ?? "—")</div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public DateOnly Lunes { get; set; }
+    [Parameter] public List<Turno> Turnos { get; set; } = [];
+    [Parameter] public TimeOnly HoraInicio { get; set; } = new(7, 0);
+    [Parameter] public TimeOnly HoraFin { get; set; } = new(21, 0);
+    [Parameter] public bool MostrarDomingo { get; set; }
+    [Parameter] public EventCallback<DateTime> AlClickEnVacio { get; set; }
+    [Parameter] public EventCallback<Turno> AlClickEnTurno { get; set; }
+
+    /// <summary>Pixeles por minuto. 30 min = 36 px.</summary>
+    private const double Escala = 1.2;
+    private const int CabeceraAlto = 48;
+
+    private double AltoTotal => (HoraFin - HoraInicio).TotalMinutes * Escala;
+
+    private IEnumerable<DateTime> Dias()
+    {
+        var cantidad = MostrarDomingo ? 7 : 6;
+        for (var i = 0; i < cantidad; i++)
+            yield return Lunes.ToDateTime(TimeOnly.MinValue).AddDays(i);
+    }
+
+    private IEnumerable<TimeOnly> Horas()
+    {
+        for (var h = HoraInicio.Hour; h <= HoraFin.Hour; h++)
+            yield return new TimeOnly(h, 0);
+    }
+
+    private double Desplazamiento(TimeOnly momento) =>
+        (momento - HoraInicio).TotalMinutes * Escala;
+
+    private double Alto(Turno turno) =>
+        Math.Max(turno.DuracionMinutos * Escala, 18);
+
+    private bool AhoraVisible()
+    {
+        var ahora = TimeOnly.FromDateTime(DateTime.Now);
+        return ahora >= HoraInicio && ahora <= HoraFin;
+    }
+
+    private IEnumerable<Turno> TurnosDe(DateTime dia) =>
+        Turnos.Where(t => t.Inicio.Date == dia.Date && t.Estado != EstadoTurno.Cancelado);
+
+    private static string Clases(EstadoTurno estado) => estado switch
+    {
+        EstadoTurno.Atendido  => "border-l-estado-atendido bg-green-50 text-green-900",
+        EstadoTurno.Ausente   => "border-l-estado-ausente bg-amber-50 text-amber-900",
+        EstadoTurno.Cancelado => "border-l-estado-cancelado bg-slate-100 text-slate-400 line-through",
+        _                     => "border-l-estado-programado bg-marca-50 text-marca-700"
+    };
+
+    /// <summary>
+    /// Convierte la posicion vertical del click en una hora, redondeada a 15 min.
+    /// OffsetY es relativo al div del dia, que arranca justo debajo de la cabecera.
+    /// </summary>
+    private async Task ClickEnVacio(DateTime dia, MouseEventArgs e)
+    {
+        var minutosCrudos = e.OffsetY / Escala;
+        var minutos = Math.Round(minutosCrudos / 15) * 15;
+
+        var momento = dia.Date
+            .Add(HoraInicio.ToTimeSpan())
+            .AddMinutes(minutos);
+
+        if (momento.TimeOfDay >= HoraFin.ToTimeSpan()) return;
+
+        await AlClickEnVacio.InvokeAsync(momento);
+    }
+}
