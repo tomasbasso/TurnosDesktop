@@ -25,22 +25,42 @@ public class TurnoService(TurnosDbContext contexto) : ITurnoService
         }
     }
 
+    public async Task<Result<List<Turno>>> ObtenerPorPacienteAsync(int pacienteId, int profesionalId)
+    {
+        try
+        {
+            var turnos = await contexto.Turnos.AsNoTracking()
+                .Where(t => t.PacienteId == pacienteId && t.ProfesionalId == profesionalId)
+                .OrderByDescending(t => t.Inicio)
+                .ToListAsync();
+
+            return Result<List<Turno>>.Ok(turnos);
+        }
+        catch (Exception ex)
+        {
+            return Result<List<Turno>>.Fail($"No se pudo obtener la historia del paciente: {ex.Message}");
+        }
+    }
+
     public async Task<Result<Turno>> GuardarAsync(Turno turno)
     {
         if (turno.Fin <= turno.Inicio)
             return Result<Turno>.Fail("El turno tiene que terminar después de empezar.");
 
-        if (turno.PacienteId == 0)
-            return Result<Turno>.Fail("Hay que elegir un paciente.");
+        turno.NombreLibre = string.IsNullOrWhiteSpace(turno.NombreLibre) ? null : turno.NombreLibre.Trim();
+
+        if (turno.PacienteId is null or 0 && turno.NombreLibre is null)
+            return Result<Turno>.Fail("Hay que elegir un paciente o escribir un nombre.");
+
+        if (turno.PacienteId is not null and not 0)
+            turno.NombreLibre = null;
 
         try
         {
             var conflicto = await BuscarConflictoAsync(turno);
             if (conflicto is not null)
             {
-                var quien = conflicto.Paciente is null
-                    ? "otro turno"
-                    : $"{conflicto.Paciente.Apellido}, {conflicto.Paciente.Nombre}";
+                var quien = conflicto.NombreMostrado == "—" ? "otro turno" : conflicto.NombreMostrado;
 
                 return Result<Turno>.Fail(
                     $"Se superpone con {quien}, {conflicto.Inicio:HH:mm}–{conflicto.Fin:HH:mm}.");

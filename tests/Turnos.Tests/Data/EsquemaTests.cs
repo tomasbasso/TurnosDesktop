@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Turnos.Core;
 using Turnos.Core.Entidades;
@@ -75,6 +76,137 @@ public class EsquemaTests
         using var otroContexto = baseDePrueba.Nuevo();
         var guardado = await otroContexto.Tratamientos.SingleAsync();
         Assert.Equal(12345.67m, guardado.PrecioSesion);
+    }
+
+    /// <summary>
+    /// Simula una base ya instalada (esquema previo a este cambio: PacienteId
+    /// NOT NULL y sin NombreLibre) y verifica que InicializarAsync la reconstruya
+    /// sin perder datos, permitiendo turnos sin paciente de ahi en mas.
+    /// </summary>
+    [Fact]
+    public async Task Inicializar_migraElEsquemaViejoDeTurnos_permitePacienteNuloYPreservaDatos()
+    {
+        using var baseDePrueba = new BaseDePrueba();
+
+        using (var conexion = new SqliteConnection($"Data Source={baseDePrueba.Ruta}"))
+        {
+            conexion.Open();
+
+            void Ejecutar(string sql)
+            {
+                using var comando = conexion.CreateCommand();
+                comando.CommandText = sql;
+                comando.ExecuteNonQuery();
+            }
+
+            Ejecutar("""
+                CREATE TABLE "Pacientes" (
+                    "Id" INTEGER NOT NULL CONSTRAINT "PK_Pacientes" PRIMARY KEY AUTOINCREMENT,
+                    "Nombre" TEXT NOT NULL,
+                    "Apellido" TEXT NOT NULL,
+                    "Dni" TEXT NULL,
+                    "Telefono" TEXT NULL,
+                    "Email" TEXT NULL,
+                    "FechaNacimiento" TEXT NULL,
+                    "ObraSocial" TEXT NULL,
+                    "NumeroAfiliado" TEXT NULL,
+                    "Observaciones" TEXT NULL,
+                    "Activo" INTEGER NOT NULL,
+                    "CreadoEl" TEXT NOT NULL
+                )
+                """);
+            Ejecutar("""
+                CREATE TABLE "Profesionales" (
+                    "Id" INTEGER NOT NULL CONSTRAINT "PK_Profesionales" PRIMARY KEY AUTOINCREMENT,
+                    "Nombre" TEXT NOT NULL,
+                    "Color" TEXT NOT NULL,
+                    "HoraInicioAgenda" TEXT NOT NULL,
+                    "HoraFinAgenda" TEXT NOT NULL,
+                    "Activo" INTEGER NOT NULL,
+                    "FotoPerfil" TEXT NULL
+                )
+                """);
+            Ejecutar("""
+                CREATE TABLE "Tratamientos" (
+                    "Id" INTEGER NOT NULL CONSTRAINT "PK_Tratamientos" PRIMARY KEY AUTOINCREMENT,
+                    "PacienteId" INTEGER NOT NULL,
+                    "ProfesionalId" INTEGER NOT NULL,
+                    "Motivo" TEXT NOT NULL,
+                    "SesionesAutorizadas" INTEGER NOT NULL,
+                    "PrecioSesion" TEXT NOT NULL,
+                    "FechaInicio" TEXT NOT NULL,
+                    "FechaAlta" TEXT NULL,
+                    "Estado" INTEGER NOT NULL,
+                    "Notas" TEXT NULL
+                )
+                """);
+            Ejecutar("""
+                CREATE TABLE "Pagos" (
+                    "Id" INTEGER NOT NULL CONSTRAINT "PK_Pagos" PRIMARY KEY AUTOINCREMENT,
+                    "ProfesionalId" INTEGER NOT NULL,
+                    "PacienteId" INTEGER NOT NULL,
+                    "TratamientoId" INTEGER NULL,
+                    "Monto" TEXT NOT NULL,
+                    "FormaPago" INTEGER NOT NULL,
+                    "Fecha" TEXT NOT NULL,
+                    "Nota" TEXT NULL
+                )
+                """);
+            Ejecutar("""
+                CREATE TABLE "Turnos" (
+                    "Id" INTEGER NOT NULL CONSTRAINT "PK_Turnos" PRIMARY KEY AUTOINCREMENT,
+                    "ProfesionalId" INTEGER NOT NULL,
+                    "PacienteId" INTEGER NOT NULL,
+                    "TratamientoId" INTEGER NULL,
+                    "Inicio" TEXT NOT NULL,
+                    "Fin" TEXT NOT NULL,
+                    "Estado" INTEGER NOT NULL,
+                    "SerieId" TEXT NULL,
+                    "Observaciones" TEXT NULL,
+                    "NotaClinica" TEXT NULL,
+                    CONSTRAINT "FK_Turnos_Pacientes_PacienteId" FOREIGN KEY ("PacienteId") REFERENCES "Pacientes" ("Id") ON DELETE CASCADE,
+                    CONSTRAINT "FK_Turnos_Profesionales_ProfesionalId" FOREIGN KEY ("ProfesionalId") REFERENCES "Profesionales" ("Id") ON DELETE CASCADE,
+                    CONSTRAINT "FK_Turnos_Tratamientos_TratamientoId" FOREIGN KEY ("TratamientoId") REFERENCES "Tratamientos" ("Id") ON DELETE SET NULL
+                )
+                """);
+            Ejecutar("CREATE INDEX \"IX_Turnos_ProfesionalId_Inicio\" ON \"Turnos\" (\"ProfesionalId\", \"Inicio\")");
+            Ejecutar("CREATE INDEX \"IX_Turnos_SerieId\" ON \"Turnos\" (\"SerieId\")");
+            Ejecutar("CREATE INDEX \"IX_Turnos_PacienteId\" ON \"Turnos\" (\"PacienteId\")");
+            Ejecutar("CREATE INDEX \"IX_Turnos_TratamientoId\" ON \"Turnos\" (\"TratamientoId\")");
+
+            Ejecutar("""
+                INSERT INTO "Profesionales" ("Nombre","Color","HoraInicioAgenda","HoraFinAgenda","Activo","FotoPerfil")
+                VALUES ('Ezequiel Tosso','#2563eb','07:00:00','21:00:00',1,'images/profesionales/ezequiel-tosso.png')
+                """);
+            Ejecutar("""
+                INSERT INTO "Pacientes" ("Nombre","Apellido","Activo","CreadoEl")
+                VALUES ('Juan','Perez',1,'2026-09-01 10:00:00')
+                """);
+            Ejecutar("""
+                INSERT INTO "Turnos" ("ProfesionalId","PacienteId","Inicio","Fin","Estado")
+                VALUES (1,1,'2026-09-08 10:00:00','2026-09-08 10:40:00',0)
+                """);
+        }
+
+        using var contexto = await baseDePrueba.InicializadaAsync();
+
+        Assert.True(await new DatabaseInitializer(contexto).ExisteColumnaAsync("Turnos", "NombreLibre"));
+
+        var turnoExistente = await contexto.Turnos.SingleAsync();
+        Assert.Equal(1, turnoExistente.PacienteId);
+
+        var turnoLibre = new Turno
+        {
+            ProfesionalId = 1,
+            NombreLibre = "Consulta particular",
+            Inicio = new DateTime(2026, 9, 8, 11, 0, 0),
+            Fin = new DateTime(2026, 9, 8, 11, 40, 0)
+        };
+        contexto.Turnos.Add(turnoLibre);
+        await contexto.SaveChangesAsync();
+
+        Assert.Null(turnoLibre.PacienteId);
+        Assert.Equal(2, await contexto.Turnos.CountAsync());
     }
 
     [Fact]

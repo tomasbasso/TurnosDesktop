@@ -41,6 +41,12 @@ public class TurnosDbContext(DbContextOptions<TurnosDbContext> opciones) : DbCon
             .HasForeignKey(t => t.TratamientoId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        modelo.Entity<Turno>()
+            .HasOne(t => t.Paciente)
+            .WithMany()
+            .HasForeignKey(t => t.PacienteId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         modelo.Entity<Tratamiento>().HasIndex(t => new { t.PacienteId, t.ProfesionalId });
         modelo.Entity<Pago>().HasIndex(p => new { p.ProfesionalId, p.Fecha });
     }

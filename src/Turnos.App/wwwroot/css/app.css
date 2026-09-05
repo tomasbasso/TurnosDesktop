@@ -4,16 +4,18 @@
 @source "../../*.razor";
 
 @theme {
-  --color-marca-50:  #eff6ff;
-  --color-marca-100: #dbeafe;
-  --color-marca-500: #3b82f6;
-  --color-marca-600: #2563eb;
-  --color-marca-700: #1d4ed8;
+  --color-marca-50:  #fbf0ec;
+  --color-marca-100: #f0dad2;
+  --color-marca-500: #b0524a;
+  --color-marca-600: #9c443d;
+  --color-marca-700: #7d332d;
 
-  --color-estado-programado: #3b82f6;
+  --color-estado-programado: #b0524a;
   --color-estado-atendido:   #22c55e;
   --color-estado-ausente:    #f59e0b;
   --color-estado-cancelado:  #9ca3af;
+
+  --font-display: Constantia, Georgia, "Times New Roman", serif;
 }
 
 html, body {

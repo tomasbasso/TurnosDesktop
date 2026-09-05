@@ -1,4 +1,4 @@
-@page "/"
+@page "/inicio"
 @implements IDisposable
 @using Turnos.Core
 @using Turnos.Core.Entidades
@@ -10,37 +10,81 @@
 <div class="flex-1 overflow-auto p-6">
     <div class="mx-auto max-w-3xl">
 
-        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <Tarjeta Titulo="Turnos"  Icono="📅" Ruta="/agenda" />
-            <Tarjeta Titulo="Pacientes" Icono="👥" Ruta="/pacientes" />
-            <Tarjeta Titulo="Historia clínica" Icono="📋" Ruta="/historia" />
-            <Tarjeta Titulo="Caja" Icono="💵" Ruta="/caja" />
-            <Tarjeta Titulo="Ajustes" Icono="⚙️" Ruta="/config" />
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Tarjeta Titulo="Turnos" Subtitulo="Ver y organizar la semana" Ruta="/agenda">
+                <Icono>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                        <rect x="3" y="4.5" width="18" height="16" rx="2" />
+                        <line x1="16" y1="2.5" x2="16" y2="6.5" />
+                        <line x1="8" y1="2.5" x2="8" y2="6.5" />
+                        <line x1="3" y1="9.5" x2="21" y2="9.5" />
+                    </svg>
+                </Icono>
+            </Tarjeta>
+            <Tarjeta Titulo="Pacientes" Subtitulo="Fichas y datos de contacto" Ruta="/pacientes">
+                <Icono>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                        <path d="M15.5 20v-1.5a3.5 3.5 0 0 0-3.5-3.5H7a3.5 3.5 0 0 0-3.5 3.5V20" />
+                        <circle cx="9.25" cy="8" r="3.25" />
+                        <path d="M17 20v-1.5a3.48 3.48 0 0 0-2-3.15" />
+                        <path d="M14 5.1a3.25 3.25 0 0 1 0 6.3" />
+                    </svg>
+                </Icono>
+            </Tarjeta>
+            <Tarjeta Titulo="Historia clínica" Subtitulo="Buscar paciente y ver sus sesiones" Ruta="/historia">
+                <Icono>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                        <rect x="6" y="3.5" width="12" height="17" rx="2" />
+                        <path d="M9.5 3.5a1.5 1.5 0 0 1 1.5-1.5h2a1.5 1.5 0 0 1 1.5 1.5" />
+                        <line x1="9" y1="10.5" x2="15" y2="10.5" />
+                        <line x1="9" y1="14" x2="15" y2="14" />
+                        <line x1="9" y1="17.5" x2="12.5" y2="17.5" />
+                    </svg>
+                </Icono>
+            </Tarjeta>
+            <Tarjeta Titulo="Caja" Subtitulo="Se habilita con los cobros" Ruta="/caja">
+                <Icono>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                        <circle cx="12" cy="12" r="8.5" />
+                        <path d="M9.4 15c.4.9 1.4 1.5 2.6 1.5 1.5 0 2.6-.9 2.6-2.1 0-3-5-1.4-5-4.1 0-1.2 1.1-2.1 2.6-2.1 1.1 0 2.1.5 2.5 1.4" />
+                        <line x1="12" y1="6.7" x2="12" y2="8.1" />
+                        <line x1="12" y1="15.9" x2="12" y2="17.3" />
+                    </svg>
+                </Icono>
+            </Tarjeta>
+            <Tarjeta Titulo="Ajustes" Subtitulo="Preferencias y copias de seguridad" Ruta="/config">
+                <Icono>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2.06 2.06 0 1 1-2.91 2.91l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V19.6a2.06 2.06 0 1 1-4.12 0v-.1a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2.06 2.06 0 1 1-2.91-2.91l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H4.4a2.06 2.06 0 1 1 0-4.12h.1a1.7 1.7 0 0 0 1.56-1.03 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2.06 2.06 0 1 1 2.91-2.91l.06.06a1.7 1.7 0 0 0 1.87.34H10.6a1.7 1.7 0 0 0 1.03-1.56V4.4a2.06 2.06 0 1 1 4.12 0v.1a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2.06 2.06 0 1 1 2.91 2.91l-.06.06a1.7 1.7 0 0 0-.34 1.87v.1a1.7 1.7 0 0 0 1.56 1.03h.1a2.06 2.06 0 1 1 0 4.12h-.1a1.7 1.7 0 0 0-1.56 1.03z" />
+                    </svg>
+                </Icono>
+            </Tarjeta>
         </div>
 
-        <h2 class="mt-8 mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+        <h2 class="mt-8 mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
             Hoy · @DateTime.Today.ToString("dddd d 'de' MMMM")
         </h2>
 
         @if (turnosDeHoy.Count == 0)
         {
-            <p class="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-400">
+            <p class="rounded-xl border border-dashed border-stone-300 p-6 text-center text-sm text-stone-400">
                 No hay turnos cargados para hoy.
             </p>
         }
         else
         {
-            <ul class="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <ul class="divide-y divide-stone-200 overflow-hidden rounded-xl border border-stone-200 bg-white">
                 @foreach (var turno in turnosDeHoy)
                 {
                     <li class="flex items-center gap-4 px-4 py-3">
-                        <span class="w-14 text-sm font-semibold tabular-nums text-slate-700">
+                        <span class="w-14 text-sm font-semibold tabular-nums text-stone-700">
                             @turno.Inicio.ToString("HH:mm")
                         </span>
-                        <span class="flex-1 text-sm text-slate-800">
-                            @(turno.Paciente?.NombreCompleto ?? "—")
+                        <span class="flex-1 text-sm text-stone-800">
+                            @turno.NombreMostrado
                         </span>
-                        <span class="text-xs text-slate-400">@turno.DuracionMinutos min</span>
+                        <span class="text-xs text-stone-400">@turno.DuracionMinutos min</span>
                     </li>
                 }
             </ul>

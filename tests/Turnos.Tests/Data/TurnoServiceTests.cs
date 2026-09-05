@@ -41,6 +41,83 @@ public class TurnoServiceTests
     }
 
     [Fact]
+    public async Task Guardar_sinPacienteNiNombreLibre_falla()
+    {
+        using var baseDePrueba = new BaseDePrueba();
+        var (contexto, servicio, _) = await PrepararAsync(baseDePrueba);
+        using var _ = contexto;
+
+        var turno = new Turno { ProfesionalId = 1, Inicio = H(10, 0), Fin = H(10, 40) };
+        var resultado = await servicio.GuardarAsync(turno);
+
+        Assert.False(resultado.Success);
+        Assert.Equal("Hay que elegir un paciente o escribir un nombre.", resultado.Message);
+    }
+
+    [Fact]
+    public async Task Guardar_conNombreLibreSinPaciente_loPersiste()
+    {
+        using var baseDePrueba = new BaseDePrueba();
+        var (contexto, servicio, _) = await PrepararAsync(baseDePrueba);
+        using var _ = contexto;
+
+        var turno = new Turno
+        {
+            ProfesionalId = 1,
+            NombreLibre = "  Consulta particular  ",
+            Inicio = H(10, 0),
+            Fin = H(10, 40)
+        };
+        var resultado = await servicio.GuardarAsync(turno);
+
+        Assert.True(resultado.Success);
+        Assert.Null(resultado.Data!.PacienteId);
+        Assert.Equal("Consulta particular", resultado.Data.NombreLibre);
+    }
+
+    [Fact]
+    public async Task Guardar_conPacienteYNombreLibre_descartaElNombreLibre()
+    {
+        using var baseDePrueba = new BaseDePrueba();
+        var (contexto, servicio, pacienteId) = await PrepararAsync(baseDePrueba);
+        using var _ = contexto;
+
+        var turno = NuevoTurno(pacienteId, H(10, 0), H(10, 40));
+        turno.NombreLibre = "no debería quedar";
+
+        var resultado = await servicio.GuardarAsync(turno);
+
+        Assert.True(resultado.Success);
+        Assert.Null(resultado.Data!.NombreLibre);
+    }
+
+    [Fact]
+    public async Task Guardar_turnoSolapadoConNombreLibre_fallaYNombraElTurno()
+    {
+        using var baseDePrueba = new BaseDePrueba();
+        var (contexto, servicio, _) = await PrepararAsync(baseDePrueba);
+        using var _ = contexto;
+        await servicio.GuardarAsync(new Turno
+        {
+            ProfesionalId = 1,
+            NombreLibre = "Consulta particular",
+            Inicio = H(10, 0),
+            Fin = H(10, 40)
+        });
+
+        var resultado = await servicio.GuardarAsync(new Turno
+        {
+            ProfesionalId = 1,
+            NombreLibre = "Otro",
+            Inicio = H(10, 20),
+            Fin = H(11, 0)
+        });
+
+        Assert.False(resultado.Success);
+        Assert.Contains("Consulta particular", resultado.Message);
+    }
+
+    [Fact]
     public async Task Guardar_conFinAnteriorAlInicio_falla()
     {
         using var baseDePrueba = new BaseDePrueba();
@@ -156,5 +233,29 @@ public class TurnoServiceTests
         Assert.True(resultado.Success);
         using var otro = baseDePrueba.Nuevo();
         Assert.Equal("Mejor movilidad cervical.", otro.Turnos.Single().NotaClinica);
+    }
+
+    [Fact]
+    public async Task ObtenerPorPaciente_devuelveSoloLosDelPacienteYDelProfesionalOrdenadosDelMasRecienteAlMasViejo()
+    {
+        using var baseDePrueba = new BaseDePrueba();
+        var (contexto, servicio, pacienteId) = await PrepararAsync(baseDePrueba);
+        using var _ = contexto;
+        contexto.Profesionales.Add(new Profesional { Nombre = "Otro" });
+        var otroPaciente = new Paciente { Nombre = "Ana", Apellido = "Gomez" };
+        contexto.Pacientes.Add(otroPaciente);
+        await contexto.SaveChangesAsync();
+
+        var masViejo = await servicio.GuardarAsync(NuevoTurno(pacienteId, H(9, 0), H(9, 40)));
+        var masNuevo = await servicio.GuardarAsync(NuevoTurno(pacienteId, H(11, 0), H(11, 40)));
+        await servicio.GuardarAsync(NuevoTurno(otroPaciente.Id, H(10, 0), H(10, 40)));
+        var deOtroProfesional = NuevoTurno(pacienteId, H(12, 0), H(12, 40));
+        deOtroProfesional.ProfesionalId = 2;
+        await servicio.GuardarAsync(deOtroProfesional);
+
+        var resultado = await servicio.ObtenerPorPacienteAsync(pacienteId, 1);
+
+        Assert.True(resultado.Success);
+        Assert.Equal([masNuevo.Data!.Id, masViejo.Data!.Id], resultado.Data!.Select(t => t.Id));
     }
 }

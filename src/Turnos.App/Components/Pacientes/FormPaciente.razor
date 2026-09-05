@@ -5,28 +5,28 @@
 <div class="space-y-3">
     <div class="grid grid-cols-2 gap-3">
         <label class="block">
-            <span class="mb-1 block text-xs font-medium text-slate-600">Apellido *</span>
-            <input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            <span class="mb-1 block text-xs font-medium text-stone-600">Apellido *</span>
+            <input class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
                    @bind="Paciente.Apellido" @bind:event="oninput" />
         </label>
         <label class="block">
-            <span class="mb-1 block text-xs font-medium text-slate-600">Nombre *</span>
-            <input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            <span class="mb-1 block text-xs font-medium text-stone-600">Nombre *</span>
+            <input class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
                    @bind="Paciente.Nombre" @bind:event="oninput" />
         </label>
         <label class="block">
-            <span class="mb-1 block text-xs font-medium text-slate-600">DNI</span>
-            <input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            <span class="mb-1 block text-xs font-medium text-stone-600">DNI</span>
+            <input class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
                    @bind="Paciente.Dni" />
         </label>
         <label class="block">
-            <span class="mb-1 block text-xs font-medium text-slate-600">Teléfono</span>
-            <input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            <span class="mb-1 block text-xs font-medium text-stone-600">Teléfono</span>
+            <input class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
                    @bind="Paciente.Telefono" />
         </label>
         <label class="block">
-            <span class="mb-1 block text-xs font-medium text-slate-600">Obra social</span>
-            <input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            <span class="mb-1 block text-xs font-medium text-stone-600">Obra social</span>
+            <input class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
                    list="obras-sociales" @bind="Paciente.ObraSocial" />
             <datalist id="obras-sociales">
                 @foreach (var obra in obrasSociales)
@@ -36,17 +36,17 @@
             </datalist>
         </label>
         <label class="block">
-            <span class="mb-1 block text-xs font-medium text-slate-600">N° de afiliado</span>
-            <input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            <span class="mb-1 block text-xs font-medium text-stone-600">N° de afiliado</span>
+            <input class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
                    @bind="Paciente.NumeroAfiliado" />
         </label>
     </div>
 
     <label class="block">
-        <span class="mb-1 block text-xs font-medium text-slate-600">
-            Observaciones <span class="font-normal text-slate-400">— alergias, antecedentes, limitaciones</span>
+        <span class="mb-1 block text-xs font-medium text-stone-600">
+            Observaciones <span class="font-normal text-stone-400">— alergias, antecedentes, limitaciones</span>
         </span>
-        <textarea rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        <textarea rows="3" class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
                   @bind="Paciente.Observaciones"></textarea>
     </label>
 
@@ -56,7 +56,7 @@
     }
 
     <div class="flex justify-end gap-2 pt-1">
-        <button class="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100"
+        <button class="rounded-lg px-4 py-2 text-sm text-stone-600 hover:bg-stone-100"
                 @onclick="AlCancelar">Cancelar</button>
         <button class="rounded-lg bg-marca-600 px-4 py-2 text-sm font-medium text-white hover:bg-marca-700"
                 @onclick="Guardar" disabled="@guardando">Guardar</button>

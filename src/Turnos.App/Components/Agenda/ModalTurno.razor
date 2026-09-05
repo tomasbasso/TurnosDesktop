@@ -3,34 +3,37 @@
 @using Turnos.Data.Servicios
 @inject ITurnoService TurnoServicio
 
-<div class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 p-4"
+<div class="fixed inset-0 z-40 flex items-center justify-center bg-stone-900/40 p-4"
      @onclick="() => AlCerrar.InvokeAsync()">
 
     <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
          @onclick:stopPropagation="true">
 
-        <h2 class="mb-4 text-base font-semibold text-slate-800">
+        <h2 class="font-display mb-4 text-lg font-semibold text-stone-800">
             @(Turno.Id == 0 ? "Nuevo turno" : "Editar turno")
         </h2>
 
         <div class="space-y-3">
             <div>
-                <span class="mb-1 block text-xs font-medium text-slate-600">Paciente *</span>
+                <span class="mb-1 block text-xs font-medium text-stone-600">Paciente o nombre *</span>
                 <BuscadorPaciente PacienteId="Turno.PacienteId"
-                                  PacienteSeleccionado="AlElegirPaciente" />
+                                  NombreLibre="@Turno.NombreLibre"
+                                  PacienteSeleccionado="AlElegirPaciente"
+                                  NombreLibreElegido="AlElegirNombreLibre"
+                                  Limpiado="AlLimpiarPaciente" />
             </div>
 
             <div class="grid grid-cols-3 gap-3">
                 <label class="col-span-2 block">
-                    <span class="mb-1 block text-xs font-medium text-slate-600">Fecha y hora</span>
+                    <span class="mb-1 block text-xs font-medium text-stone-600">Fecha y hora</span>
                     <input type="datetime-local"
-                           class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                           class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
                            value="@Turno.Inicio.ToString("yyyy-MM-ddTHH:mm")"
                            @onchange="AlCambiarInicio" />
                 </label>
                 <label class="block">
-                    <span class="mb-1 block text-xs font-medium text-slate-600">Duración</span>
-                    <select class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    <span class="mb-1 block text-xs font-medium text-stone-600">Duración</span>
+                    <select class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
                             value="@duracion" @onchange="AlCambiarDuracion">
                         <option value="30">30 min</option>
                         <option value="40">40 min</option>
@@ -41,8 +44,8 @@
             </div>
 
             <label class="block">
-                <span class="mb-1 block text-xs font-medium text-slate-600">Observaciones</span>
-                <input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                <span class="mb-1 block text-xs font-medium text-stone-600">Observaciones</span>
+                <input class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
                        placeholder="viene con la orden, primera vez, etc."
                        @bind="Turno.Observaciones" />
             </label>
@@ -53,7 +56,7 @@
             }
 
             <div class="flex justify-end gap-2 pt-1">
-                <button class="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100"
+                <button class="rounded-lg px-4 py-2 text-sm text-stone-600 hover:bg-stone-100"
                         @onclick="() => AlCerrar.InvokeAsync()">Cancelar</button>
                 <button class="rounded-lg bg-marca-600 px-4 py-2 text-sm font-medium text-white hover:bg-marca-700"
                         @onclick="Guardar" disabled="@guardando">Guardar</button>
@@ -76,7 +79,23 @@
         if (Turno.Fin > Turno.Inicio) duracion = Turno.DuracionMinutos;
     }
 
-    private void AlElegirPaciente(Paciente paciente) => Turno.PacienteId = paciente.Id;
+    private void AlElegirPaciente(Paciente paciente)
+    {
+        Turno.PacienteId = paciente.Id;
+        Turno.NombreLibre = null;
+    }
+
+    private void AlElegirNombreLibre(string nombre)
+    {
+        Turno.NombreLibre = nombre;
+        Turno.PacienteId = null;
+    }
+
+    private void AlLimpiarPaciente()
+    {
+        Turno.PacienteId = null;
+        Turno.NombreLibre = null;
+    }
 
     private void AlCambiarInicio(ChangeEventArgs e)
     {

@@ -6,8 +6,12 @@ public class Turno
     public int ProfesionalId { get; set; }
     public Profesional? Profesional { get; set; }
 
-    public int PacienteId { get; set; }
+    /// <summary>Nullable: permite el turno sin ficha de paciente, ver NombreLibre.</summary>
+    public int? PacienteId { get; set; }
     public Paciente? Paciente { get; set; }
+
+    /// <summary>El nombre cuando el turno no tiene un paciente registrado. Se ignora si PacienteId tiene valor.</summary>
+    public string? NombreLibre { get; set; }
 
     /// <summary>Nullable: permite el turno suelto de primera consulta.</summary>
     public int? TratamientoId { get; set; }
@@ -27,4 +31,6 @@ public class Turno
     public string? NotaClinica { get; set; }
 
     public int DuracionMinutos => (int)(Fin - Inicio).TotalMinutes;
+
+    public string NombreMostrado => Paciente?.NombreCompleto ?? NombreLibre ?? "—";
 }

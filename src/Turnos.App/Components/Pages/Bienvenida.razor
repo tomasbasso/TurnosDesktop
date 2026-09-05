@@ -1,0 +1,64 @@
+@page "/"
+@layout Turnos.App.Components.Layout.LayoutVacio
+@using Microsoft.EntityFrameworkCore
+@using Turnos.Core.Entidades
+@using Turnos.Data
+@inject TurnosDbContext Contexto
+@inject EstadoApp Estado
+@inject NavigationManager Navegacion
+
+<div class="bienvenida-fondo flex h-screen flex-col items-center justify-center px-6">
+    <div class="flex flex-wrap items-center justify-center gap-10">
+        @foreach (var profesional in profesionales)
+        {
+            <button class="bienvenida-tarjeta flex cursor-pointer flex-col items-center gap-3 rounded-3xl px-10 py-8 text-center transition duration-300"
+                    @onclick="@(() => Elegir(profesional))">
+                <span class="bienvenida-eyebrow">@Saludo</span>
+
+                <span class="bienvenida-halo relative grid place-items-center p-2">
+                    @if (!string.IsNullOrWhiteSpace(profesional.FotoPerfil))
+                    {
+                        <img src="@profesional.FotoPerfil"
+                             alt="@profesional.Nombre"
+                             class="bienvenida-retrato h-44 w-44 rounded-2xl object-cover" />
+                    }
+                    else
+                    {
+                        <span class="bienvenida-retrato bienvenida-retrato--inicial flex h-44 w-44 items-center justify-center rounded-2xl text-5xl font-semibold">
+                            @profesional.Nombre[..1].ToUpperInvariant()
+                        </span>
+                    }
+                </span>
+
+                <span class="bienvenida-nombre">@profesional.Nombre</span>
+                <span class="bienvenida-subtitulo text-xs">Tocá tu foto para entrar</span>
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Profesional> profesionales = [];
+
+    private static string Saludo => DateTime.Now.Hour switch
+    {
+        >= 6 and < 12 => "Buenos días",
+        >= 12 and < 20 => "Buenas tardes",
+        _ => "Buenas noches"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        profesionales = await Contexto.Profesionales
+            .AsNoTracking().Where(p => p.Activo).OrderBy(p => p.Nombre).ToListAsync();
+
+        if (profesionales.Count == 0)
+            Navegacion.NavigateTo("/inicio");
+    }
+
+    private void Elegir(Profesional profesional)
+    {
+        Estado.ProfesionalActivoId = profesional.Id;
+        Navegacion.NavigateTo("/inicio");
+    }
+}

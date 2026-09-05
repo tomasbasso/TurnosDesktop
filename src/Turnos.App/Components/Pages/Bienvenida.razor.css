@@ -1,0 +1,96 @@
+.bienvenida-fondo {
+    --tinta: #211c18;
+    --panel: #2b2420;
+    --papel: #f4ebda;
+    --vino: #b0524a;
+    --arena: #b9a98c;
+    --brasa: #caa25a;
+
+    background:
+        radial-gradient(48rem 32rem at 50% 0%, rgba(176, 82, 74, 0.22), transparent 65%),
+        var(--tinta);
+}
+
+.bienvenida-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--vino);
+}
+
+.bienvenida-halo::before {
+    content: "";
+    position: absolute;
+    inset: -0.5rem;
+    border-radius: 1.75rem;
+    background: radial-gradient(circle, rgba(202, 162, 90, 0.55), transparent 70%);
+    filter: blur(8px);
+    opacity: 0.55;
+    animation: bienvenida-respirar 6s ease-in-out infinite;
+}
+
+.bienvenida-retrato {
+    border: 1px solid rgba(202, 162, 90, 0.55);
+    box-shadow: 0 18px 36px -18px rgba(0, 0, 0, 0.65);
+}
+
+.bienvenida-retrato--inicial {
+    background: var(--panel);
+    color: var(--papel);
+    font-family: Constantia, Georgia, "Times New Roman", serif;
+}
+
+.bienvenida-nombre {
+    font-family: Constantia, Georgia, "Times New Roman", serif;
+    font-size: 1.85rem;
+    font-weight: 600;
+    color: var(--papel);
+}
+
+.bienvenida-nombre::after {
+    content: "";
+    display: block;
+    height: 2px;
+    width: 3rem;
+    margin: 0.5rem auto 0;
+    background: var(--brasa);
+    transform: scaleX(0.5);
+    transition: transform 0.3s ease;
+}
+
+.bienvenida-tarjeta:hover,
+.bienvenida-tarjeta:focus-visible {
+    transform: translateY(-6px);
+}
+
+.bienvenida-tarjeta:hover .bienvenida-nombre::after,
+.bienvenida-tarjeta:focus-visible .bienvenida-nombre::after {
+    transform: scaleX(1);
+}
+
+.bienvenida-tarjeta:focus-visible {
+    outline: 2px solid var(--brasa);
+    outline-offset: 6px;
+    border-radius: 1.75rem;
+}
+
+.bienvenida-subtitulo {
+    color: var(--arena);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bienvenida-halo::before {
+        animation: none;
+    }
+
+    .bienvenida-tarjeta,
+    .bienvenida-nombre::after {
+        transition: none;
+    }
+}
+
+@keyframes bienvenida-respirar {
+    0%, 100% { opacity: 0.4; transform: scale(0.95); }
+    50% { opacity: 0.7; transform: scale(1.05); }
+}

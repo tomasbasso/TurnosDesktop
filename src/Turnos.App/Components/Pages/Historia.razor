@@ -1,7 +1,52 @@
 @page "/historia"
+@using Turnos.Core.Entidades
+@using Turnos.Data.Servicios
+@inject IPacienteService PacienteServicio
+@inject NavigationManager Navegacion
 
-<div class="flex flex-1 items-center justify-center p-6">
-    <p class="max-w-sm text-center text-sm text-slate-400">
-        La historia clínica se habilita junto con los tratamientos, en la próxima etapa.
-    </p>
+<div class="flex min-h-0 flex-1 flex-col p-6">
+    <div class="mx-auto flex w-full max-w-md min-h-0 flex-1 flex-col">
+        <h1 class="font-display mb-4 text-lg font-semibold text-stone-800">Historia clínica</h1>
+
+        <input class="mb-4 rounded-lg border border-stone-300 px-3 py-2 text-sm"
+               placeholder="Buscar paciente por apellido, nombre o DNI"
+               @bind="texto" @bind:event="oninput" @bind:after="Buscar" />
+
+        @if (!string.IsNullOrWhiteSpace(texto) && pacientes.Count == 0)
+        {
+            <p class="text-sm text-stone-400">No se encontraron pacientes.</p>
+        }
+        else if (string.IsNullOrWhiteSpace(texto))
+        {
+            <p class="text-sm text-stone-400">Buscá un paciente para ver su historia clínica.</p>
+        }
+        else
+        {
+            <ul class="min-h-0 flex-1 divide-y divide-stone-200 overflow-auto rounded-xl border border-stone-200 bg-white">
+                @foreach (var paciente in pacientes)
+                {
+                    <li class="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-stone-50"
+                        @onclick="@(() => Navegacion.NavigateTo($"/pacientes/{paciente.Id}/historia"))">
+                        <span class="flex-1 text-sm font-medium text-stone-800">@paciente.NombreCompleto</span>
+                        @if (!string.IsNullOrWhiteSpace(paciente.Dni))
+                        {
+                            <span class="text-xs text-stone-400">@paciente.Dni</span>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </div>
 </div>
+
+@code {
+    private List<Paciente> pacientes = [];
+    private string? texto;
+
+    private async Task Buscar()
+    {
+        if (string.IsNullOrWhiteSpace(texto)) { pacientes = []; return; }
+        var resultado = await PacienteServicio.BuscarAsync(texto, limite: 20);
+        if (resultado.Success) pacientes = resultado.Data!;
+    }
+}

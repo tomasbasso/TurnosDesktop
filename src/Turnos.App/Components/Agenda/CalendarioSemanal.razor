@@ -3,12 +3,12 @@
 
 <div class="flex min-h-0 flex-1 overflow-auto bg-white">
 
-    <div class="sticky left-0 z-10 w-14 shrink-0 border-r border-slate-200 bg-white">
+    <div class="sticky left-0 z-10 w-14 shrink-0 border-r border-stone-200 bg-white">
         <div style="height:@(CabeceraAlto)px"></div>
         @foreach (var hora in Horas())
         {
-            <div class="relative border-t border-slate-100" style="height:@(60 * Escala)px">
-                <span class="absolute -top-2 right-1 text-[10px] tabular-nums text-slate-400">
+            <div class="relative border-t border-stone-100" style="height:@(60 * Escala)px">
+                <span class="absolute -top-2 right-1 text-[10px] tabular-nums text-stone-400">
                     @hora.ToString("HH:mm")
                 </span>
             </div>
@@ -17,14 +17,14 @@
 
     @foreach (var dia in Dias())
     {
-        <div class="min-w-[110px] flex-1 border-r border-slate-200 last:border-r-0">
+        <div class="min-w-[110px] flex-1 border-r border-stone-200 last:border-r-0">
 
-            <div class="sticky top-0 z-10 flex flex-col items-center justify-center border-b border-slate-200 bg-white"
+            <div class="sticky top-0 z-10 flex flex-col items-center justify-center border-b border-stone-200 bg-white"
                  style="height:@(CabeceraAlto)px">
-                <span class="text-[10px] uppercase tracking-wide text-slate-400">
+                <span class="text-[10px] uppercase tracking-wide text-stone-400">
                     @dia.ToString("ddd")
                 </span>
-                <span class="text-sm font-semibold @(dia == DateTime.Today ? "text-marca-600" : "text-slate-700")">
+                <span class="text-sm font-semibold @(dia == DateTime.Today ? "text-marca-600" : "text-stone-700")">
                     @dia.Day
                 </span>
             </div>
@@ -34,7 +34,7 @@
 
                 @foreach (var hora in Horas())
                 {
-                    <div class="pointer-events-none absolute inset-x-0 border-t border-slate-100"
+                    <div class="pointer-events-none absolute inset-x-0 border-t border-stone-100"
                          style="top:@(Desplazamiento(hora))px"></div>
                 }
 
@@ -51,7 +51,7 @@
                          @onclick:stopPropagation="true"
                          @onclick="@(() => AlClickEnTurno.InvokeAsync(turno))">
                         <div class="font-semibold tabular-nums">@turno.Inicio.ToString("HH:mm")</div>
-                        <div class="truncate">@(turno.Paciente?.NombreCompleto ?? "—")</div>
+                        <div class="truncate">@turno.NombreMostrado</div>
                     </div>
                 }
             </div>
@@ -106,7 +106,7 @@
     {
         EstadoTurno.Atendido  => "border-l-estado-atendido bg-green-50 text-green-900",
         EstadoTurno.Ausente   => "border-l-estado-ausente bg-amber-50 text-amber-900",
-        EstadoTurno.Cancelado => "border-l-estado-cancelado bg-slate-100 text-slate-400 line-through",
+        EstadoTurno.Cancelado => "border-l-estado-cancelado bg-stone-100 text-stone-400 line-through",
         _                     => "border-l-estado-programado bg-marca-50 text-marca-700"
     };
 

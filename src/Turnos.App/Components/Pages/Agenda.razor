@@ -10,11 +10,11 @@
 
 <div class="relative flex min-h-0 flex-1 flex-col">
 
-    <div class="flex shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-4 py-2">
-        <button class="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100" @onclick="SemanaAnterior">‹</button>
-        <button class="rounded-lg px-3 py-1 text-sm font-medium text-slate-600 hover:bg-slate-100" @onclick="IrAHoy">Hoy</button>
-        <button class="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100" @onclick="SemanaSiguiente">›</button>
-        <span class="ml-2 text-sm font-semibold text-slate-700">@Rotulo()</span>
+    <div class="flex shrink-0 items-center gap-2 border-b border-stone-200 bg-white px-4 py-2">
+        <button class="rounded-lg px-2 py-1 text-stone-500 hover:bg-stone-100" @onclick="SemanaAnterior">‹</button>
+        <button class="rounded-lg px-3 py-1 text-sm font-medium text-stone-600 hover:bg-stone-100" @onclick="IrAHoy">Hoy</button>
+        <button class="rounded-lg px-2 py-1 text-stone-500 hover:bg-stone-100" @onclick="SemanaSiguiente">›</button>
+        <span class="ml-2 text-sm font-semibold text-stone-700">@Rotulo()</span>
     </div>
 
     <CalendarioSemanal Lunes="lunes"
@@ -138,6 +138,7 @@
             Id = turno.Id,
             ProfesionalId = turno.ProfesionalId,
             PacienteId = turno.PacienteId,
+            NombreLibre = turno.NombreLibre,
             TratamientoId = turno.TratamientoId,
             Inicio = turno.Inicio,
             Fin = turno.Fin,
