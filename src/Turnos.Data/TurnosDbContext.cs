@@ -12,6 +12,7 @@ public class TurnosDbContext(DbContextOptions<TurnosDbContext> opciones) : DbCon
     public DbSet<Tratamiento> Tratamientos => Set<Tratamiento>();
     public DbSet<Turno> Turnos => Set<Turno>();
     public DbSet<Pago> Pagos => Set<Pago>();
+    public DbSet<NotaHistoria> NotasHistoria => Set<NotaHistoria>();
 
     /// <summary>
     /// decimal -> TEXT con cultura invariante. SQLite no tiene tipo decimal y el
@@ -49,5 +50,17 @@ public class TurnosDbContext(DbContextOptions<TurnosDbContext> opciones) : DbCon
 
         modelo.Entity<Tratamiento>().HasIndex(t => new { t.PacienteId, t.ProfesionalId });
         modelo.Entity<Pago>().HasIndex(p => new { p.ProfesionalId, p.Fecha });
+
+        modelo.Entity<NotaHistoria>().HasIndex(n => new { n.PacienteId, n.ProfesionalId });
+        modelo.Entity<NotaHistoria>()
+            .HasOne(n => n.Paciente)
+            .WithMany()
+            .HasForeignKey(n => n.PacienteId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelo.Entity<NotaHistoria>()
+            .HasOne(n => n.Profesional)
+            .WithMany()
+            .HasForeignKey(n => n.ProfesionalId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

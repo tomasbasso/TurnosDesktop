@@ -4,20 +4,22 @@
 @using Turnos.Core.Entidades
 @using Turnos.Data.Servicios
 @inject ITurnoService TurnoServicio
+@inject INotaHistoriaService NotaHistoriaServicio
 @inject IPacienteService PacienteServicio
 @inject EstadoApp Estado
 @inject NavigationManager Navegacion
 
-<div class="flex min-h-0 flex-1 flex-col p-6">
+<div class="flex min-h-0 flex-1 flex-col p-6 md:p-8">
     <div class="mx-auto flex w-full max-w-3xl min-h-0 flex-1 flex-col">
 
-        <div class="mb-4 flex items-center gap-3">
-            <button class="rounded-lg px-2 py-1 text-stone-500 hover:bg-stone-100"
+        <div class="surface-card mb-5 flex items-center gap-3 rounded-2xl p-4">
+            <button class="soft-action grid h-9 w-9 place-items-center rounded-xl text-stone-500"
                     @onclick="@(() => Navegacion.NavigateTo("/pacientes"))">←</button>
             @if (paciente is not null)
             {
                 <div>
-                    <h1 class="font-display text-lg font-semibold text-stone-800">@paciente.NombreCompleto</h1>
+                    <p class="page-eyebrow mb-1">Historia del paciente</p>
+                    <h1 class="font-display text-xl font-semibold tracking-tight text-stone-800">@paciente.NombreCompleto</h1>
                     @if (!string.IsNullOrWhiteSpace(paciente.Dni))
                     {
                         <p class="text-xs text-stone-500">DNI @paciente.Dni</p>
@@ -30,45 +32,120 @@
         {
             <p class="text-sm text-stone-400">No se encontró el paciente.</p>
         }
-        else if (filas.Count == 0)
-        {
-            <p class="rounded-xl border border-dashed border-stone-300 p-6 text-center text-sm text-stone-400">
-                Este paciente todavía no tiene turnos con el profesional activo.
-            </p>
-        }
         else
         {
-            <ul class="min-h-0 flex-1 space-y-3 overflow-auto">
-                @foreach (var fila in filas)
-                {
-                    <li class="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-                        <div class="mb-2 flex items-center gap-2">
-                            <span class="text-sm font-medium text-stone-700">
-                                @fila.Turno.Inicio.ToString("dddd d/MM/yyyy · HH:mm")
-                            </span>
-                            <span class="rounded-full px-2 py-0.5 text-xs font-medium text-white @ClaseEstado(fila.Turno.Estado)">
-                                @fila.Turno.Estado
-                            </span>
-                        </div>
+            <div class="surface-card mb-5 rounded-2xl p-4">
+                <p class="mb-2 text-sm font-semibold text-stone-700">＋ Sumar nueva información</p>
+                <textarea class="input-control w-full resize-none rounded-xl p-3 text-sm"
+                          rows="3"
+                          placeholder="Antecedentes, una consulta telefónica, indicaciones generales…"
+                          @bind="textoNuevaNota" @bind:event="oninput"></textarea>
+                <div class="mt-2 flex items-center gap-2">
+                    <button class="primary-action rounded-xl px-4 py-2 text-sm font-semibold text-white"
+                            @onclick="AgregarNota">＋ Agregar</button>
+                    @if (mensajeNuevaNota is not null)
+                    {
+                        <span class="text-xs text-green-700">@mensajeNuevaNota</span>
+                    }
+                </div>
+            </div>
 
-                        @if (fila.Turno.Estado == EstadoTurno.Atendido)
+            @if (filas.Count == 0)
+            {
+                <p class="surface-card rounded-2xl border-dashed p-8 text-center text-sm text-stone-500">
+                    Todavía no hay información cargada para este paciente.
+                </p>
+            }
+            else
+            {
+                <ul class="history-timeline min-h-0 flex-1 space-y-3 overflow-auto">
+                    @foreach (var fila in filas)
+                    {
+                        @if (fila is FilaTurno filaTurno)
                         {
-                            <textarea class="w-full resize-none rounded-lg border border-stone-300 p-2 text-sm"
-                                      rows="3"
-                                      placeholder="Qué se trabajó, cómo respondió, qué sigue."
-                                      @bind="fila.NotaEditada" @bind:event="oninput"></textarea>
-                            <div class="mt-2 flex items-center gap-2">
-                                <button class="rounded-lg bg-marca-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-marca-700"
-                                        @onclick="@(() => GuardarNota(fila))">Guardar</button>
-                                @if (fila.Mensaje is not null)
+                            <li class="history-entry surface-card relative rounded-2xl p-4">
+                                <div class="mb-2 flex items-center gap-2">
+                                    <span class="text-sm font-medium text-stone-700">
+                                        @filaTurno.Turno.Inicio.ToString("dddd d/MM/yyyy · HH:mm")
+                                    </span>
+                                    <span class="rounded-lg px-2 py-1 text-xs font-semibold text-white @ClaseEstado(filaTurno.Turno.Estado)">
+                                        @filaTurno.Turno.Estado
+                                    </span>
+                                    @if (filaTurno.Turno.Estado == EstadoTurno.Atendido && !filaTurno.Editando)
+                                    {
+                                        <button class="soft-action ml-auto grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs text-stone-500"
+                                                title="Editar nota" @onclick="@(() => filaTurno.Editando = true)">✏️</button>
+                                    }
+                                </div>
+
+                                @if (filaTurno.Turno.Estado == EstadoTurno.Atendido)
                                 {
-                                    <span class="text-xs text-green-700">@fila.Mensaje</span>
+                                    @if (filaTurno.Editando)
+                                    {
+                                        <textarea class="input-control w-full resize-none rounded-xl p-3 text-sm"
+                                                  rows="3"
+                                                  placeholder="Qué se trabajó, cómo respondió, qué sigue."
+                                                  @bind="filaTurno.NotaEditada" @bind:event="oninput"></textarea>
+                                        <div class="mt-2 flex items-center gap-2">
+                                            <button class="primary-action rounded-xl px-3 py-1.5 text-xs font-semibold text-white"
+                                                    @onclick="@(() => GuardarNotaDeTurno(filaTurno))">Guardar</button>
+                                            <button class="rounded-xl px-3 py-1.5 text-xs font-medium text-stone-500 hover:text-stone-700"
+                                                    @onclick="@(() => CancelarEdicionDeTurno(filaTurno))">Cancelar</button>
+                                            @if (filaTurno.Mensaje is not null)
+                                            {
+                                                <span class="text-xs text-green-700">@filaTurno.Mensaje</span>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="whitespace-pre-wrap text-sm text-stone-600">@filaTurno.Turno.NotaClinica</p>
+                                    }
                                 }
-                            </div>
+                            </li>
                         }
-                    </li>
-                }
-            </ul>
+                        else if (fila is FilaNota filaNota)
+                        {
+                            <li class="history-entry history-entry--note surface-card relative rounded-2xl p-4">
+                                <div class="mb-2 flex items-center gap-2">
+                                    <span class="text-sm font-medium text-stone-700">
+                                        @filaNota.Nota.CreadoEl.ToString("dddd d/MM/yyyy · HH:mm")
+                                    </span>
+                                    <span class="rounded-lg bg-stone-100 px-2 py-1 text-xs font-semibold text-stone-600">
+                                        Nota
+                                    </span>
+                                    @if (!filaNota.Editando)
+                                    {
+                                        <button class="soft-action ml-auto grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs text-stone-500"
+                                                title="Editar nota" @onclick="@(() => filaNota.Editando = true)">✏️</button>
+                                    }
+                                </div>
+
+                                @if (filaNota.Editando)
+                                {
+                                    <textarea class="input-control w-full resize-none rounded-xl p-3 text-sm"
+                                              rows="3"
+                                              @bind="filaNota.TextoEditado" @bind:event="oninput"></textarea>
+                                    <div class="mt-2 flex items-center gap-2">
+                                        <button class="primary-action rounded-xl px-3 py-1.5 text-xs font-semibold text-white"
+                                                @onclick="@(() => GuardarNotaManual(filaNota))">Guardar</button>
+                                        <button class="rounded-xl px-3 py-1.5 text-xs font-medium text-stone-500 hover:text-stone-700"
+                                                @onclick="@(() => CancelarEdicionDeNota(filaNota))">Cancelar</button>
+                                        @if (filaNota.Mensaje is not null)
+                                        {
+                                            <span class="text-xs text-green-700">@filaNota.Mensaje</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="whitespace-pre-wrap text-sm text-stone-600">@filaNota.Nota.Texto</p>
+                                }
+                            </li>
+                        }
+                    }
+                </ul>
+            }
         }
     </div>
 </div>
@@ -78,6 +155,8 @@
 
     private Paciente? paciente;
     private List<FilaHistoria> filas = [];
+    private string? textoNuevaNota;
+    private string? mensajeNuevaNota;
 
     protected override async Task OnInitializedAsync()
     {
@@ -97,17 +176,67 @@
         paciente = pacienteResultado.Success ? pacienteResultado.Data : null;
 
         var turnosResultado = await TurnoServicio.ObtenerPorPacienteAsync(Id, Estado.ProfesionalActivoId);
-        filas = turnosResultado.Success
-            ? turnosResultado.Data!.Select(t => new FilaHistoria(t)).ToList()
+        var notasResultado = await NotaHistoriaServicio.ObtenerPorPacienteAsync(Id, Estado.ProfesionalActivoId);
+
+        IEnumerable<FilaHistoria> filasDeTurnos = turnosResultado.Success
+            ? turnosResultado.Data!.Select(t => new FilaTurno(t))
             : [];
+        IEnumerable<FilaHistoria> filasDeNotas = notasResultado.Success
+            ? notasResultado.Data!.Select(n => new FilaNota(n))
+            : [];
+
+        filas = filasDeTurnos.Concat(filasDeNotas).OrderByDescending(f => f.Fecha).ToList();
     }
 
-    private async Task GuardarNota(FilaHistoria fila)
+    private async Task AgregarNota()
+    {
+        var resultado = await NotaHistoriaServicio.CrearAsync(Id, Estado.ProfesionalActivoId, textoNuevaNota ?? "");
+        if (resultado.Success)
+        {
+            textoNuevaNota = null;
+            mensajeNuevaNota = null;
+            filas.Insert(0, new FilaNota(resultado.Data!));
+        }
+        else
+        {
+            mensajeNuevaNota = resultado.Message;
+        }
+    }
+
+    private async Task GuardarNotaDeTurno(FilaTurno fila)
     {
         var resultado = await TurnoServicio.GuardarNotaClinicaAsync(fila.Turno.Id, fila.NotaEditada);
         fila.Mensaje = resultado.Success ? "Guardada." : resultado.Message;
         if (resultado.Success)
+        {
             fila.Turno.NotaClinica = string.IsNullOrWhiteSpace(fila.NotaEditada) ? null : fila.NotaEditada.Trim();
+            fila.Editando = string.IsNullOrWhiteSpace(fila.Turno.NotaClinica);
+        }
+    }
+
+    private void CancelarEdicionDeTurno(FilaTurno fila)
+    {
+        fila.NotaEditada = fila.Turno.NotaClinica;
+        fila.Mensaje = null;
+        fila.Editando = false;
+    }
+
+    private async Task GuardarNotaManual(FilaNota fila)
+    {
+        var resultado = await NotaHistoriaServicio.EditarTextoAsync(fila.Nota.Id, fila.TextoEditado);
+        fila.Mensaje = resultado.Success ? "Guardada." : resultado.Message;
+        if (resultado.Success)
+        {
+            fila.Nota.Texto = fila.TextoEditado.Trim();
+            fila.Editando = false;
+        }
+    }
+
+    private void CancelarEdicionDeNota(FilaNota fila)
+    {
+        fila.TextoEditado = fila.Nota.Texto;
+        fila.Mensaje = null;
+        fila.Editando = false;
     }
 
     private static string ClaseEstado(EstadoTurno estado) => estado switch
@@ -129,10 +258,26 @@
 
     public void Dispose() => Estado.Cambio -= AlCambiarProfesional;
 
-    private class FilaHistoria(Turno turno)
+    private abstract class FilaHistoria
+    {
+        public abstract DateTime Fecha { get; }
+    }
+
+    private class FilaTurno(Turno turno) : FilaHistoria
     {
         public Turno Turno { get; } = turno;
         public string? NotaEditada { get; set; } = turno.NotaClinica;
         public string? Mensaje { get; set; }
+        public bool Editando { get; set; } = string.IsNullOrWhiteSpace(turno.NotaClinica);
+        public override DateTime Fecha => Turno.Inicio;
+    }
+
+    private class FilaNota(NotaHistoria nota) : FilaHistoria
+    {
+        public NotaHistoria Nota { get; } = nota;
+        public string TextoEditado { get; set; } = nota.Texto;
+        public string? Mensaje { get; set; }
+        public bool Editando { get; set; }
+        public override DateTime Fecha => Nota.CreadoEl;
     }
 }

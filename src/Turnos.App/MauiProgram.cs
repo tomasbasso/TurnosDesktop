@@ -33,6 +33,7 @@ public static class MauiProgram
         builder.Services.AddTransient<DatabaseInitializer>();
         builder.Services.AddTransient<IPacienteService, PacienteService>();
         builder.Services.AddTransient<ITurnoService, TurnoService>();
+        builder.Services.AddTransient<INotaHistoriaService, NotaHistoriaService>();
         builder.Services.AddTransient<IBackupService, BackupService>();
         builder.Services.AddSingleton<EstadoApp>();
 

@@ -209,6 +209,88 @@ public class EsquemaTests
         Assert.Equal(2, await contexto.Turnos.CountAsync());
     }
 
+    /// <summary>
+    /// Simula una base ya instalada anterior a NotasHistoria (la tabla no existe)
+    /// y verifica que InicializarAsync la agregue sin tocar el resto del esquema.
+    /// </summary>
+    [Fact]
+    public async Task Inicializar_agregaLaTablaNotasHistoria_siNoExiste()
+    {
+        using var baseDePrueba = new BaseDePrueba();
+
+        using (var conexion = new SqliteConnection($"Data Source={baseDePrueba.Ruta}"))
+        {
+            conexion.Open();
+
+            void Ejecutar(string sql)
+            {
+                using var comando = conexion.CreateCommand();
+                comando.CommandText = sql;
+                comando.ExecuteNonQuery();
+            }
+
+            Ejecutar("""
+                CREATE TABLE "Pacientes" (
+                    "Id" INTEGER NOT NULL CONSTRAINT "PK_Pacientes" PRIMARY KEY AUTOINCREMENT,
+                    "Nombre" TEXT NOT NULL,
+                    "Apellido" TEXT NOT NULL,
+                    "Dni" TEXT NULL,
+                    "Telefono" TEXT NULL,
+                    "Email" TEXT NULL,
+                    "FechaNacimiento" TEXT NULL,
+                    "ObraSocial" TEXT NULL,
+                    "NumeroAfiliado" TEXT NULL,
+                    "Observaciones" TEXT NULL,
+                    "Activo" INTEGER NOT NULL,
+                    "CreadoEl" TEXT NOT NULL
+                )
+                """);
+            Ejecutar("""
+                CREATE TABLE "Profesionales" (
+                    "Id" INTEGER NOT NULL CONSTRAINT "PK_Profesionales" PRIMARY KEY AUTOINCREMENT,
+                    "Nombre" TEXT NOT NULL,
+                    "Color" TEXT NOT NULL,
+                    "HoraInicioAgenda" TEXT NOT NULL,
+                    "HoraFinAgenda" TEXT NOT NULL,
+                    "Activo" INTEGER NOT NULL,
+                    "FotoPerfil" TEXT NULL
+                )
+                """);
+            Ejecutar("""
+                CREATE TABLE "Turnos" (
+                    "Id" INTEGER NOT NULL CONSTRAINT "PK_Turnos" PRIMARY KEY AUTOINCREMENT,
+                    "ProfesionalId" INTEGER NOT NULL,
+                    "PacienteId" INTEGER NULL,
+                    "TratamientoId" INTEGER NULL,
+                    "Inicio" TEXT NOT NULL,
+                    "Fin" TEXT NOT NULL,
+                    "Estado" INTEGER NOT NULL,
+                    "SerieId" TEXT NULL,
+                    "Observaciones" TEXT NULL,
+                    "NotaClinica" TEXT NULL,
+                    "NombreLibre" TEXT NULL
+                )
+                """);
+            Ejecutar("""
+                INSERT INTO "Profesionales" ("Nombre","Color","HoraInicioAgenda","HoraFinAgenda","Activo","FotoPerfil")
+                VALUES ('Ezequiel Tosso','#2563eb','07:00:00','21:00:00',1,'images/profesionales/ezequiel-tosso.png')
+                """);
+            Ejecutar("""
+                INSERT INTO "Pacientes" ("Nombre","Apellido","Activo","CreadoEl")
+                VALUES ('Juan','Perez',1,'2026-09-01 10:00:00')
+                """);
+        }
+
+        using var contexto = await baseDePrueba.InicializadaAsync();
+
+        Assert.True(await new DatabaseInitializer(contexto).ExisteTablaAsync("NotasHistoria"));
+
+        contexto.NotasHistoria.Add(new NotaHistoria { PacienteId = 1, ProfesionalId = 1, Texto = "Antecedente cargado a mano." });
+        await contexto.SaveChangesAsync();
+
+        Assert.Equal("Antecedente cargado a mano.", (await contexto.NotasHistoria.SingleAsync()).Texto);
+    }
+
     [Fact]
     public async Task Enum_sePersisteComoEntero()
     {

@@ -35,6 +35,28 @@ public class DatabaseInitializer(TurnosDbContext contexto)
 
         if (!await ExisteColumnaAsync("Turnos", "NombreLibre"))
             await PermitirTurnoSinPacienteAsync();
+
+        if (!await ExisteTablaAsync("NotasHistoria"))
+            await CrearTablaNotasHistoriaAsync();
+    }
+
+    /// <summary>Entradas manuales de historia clínica, sin turno asociado.</summary>
+    private async Task CrearTablaNotasHistoriaAsync()
+    {
+        await EjecutarAsync("""
+            CREATE TABLE "NotasHistoria" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_NotasHistoria" PRIMARY KEY AUTOINCREMENT,
+                "PacienteId" INTEGER NOT NULL,
+                "ProfesionalId" INTEGER NOT NULL,
+                "CreadoEl" TEXT NOT NULL,
+                "Texto" TEXT NOT NULL,
+                CONSTRAINT "FK_NotasHistoria_Pacientes_PacienteId" FOREIGN KEY ("PacienteId") REFERENCES "Pacientes" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_NotasHistoria_Profesionales_ProfesionalId" FOREIGN KEY ("ProfesionalId") REFERENCES "Profesionales" ("Id") ON DELETE CASCADE
+            )
+            """);
+
+        await EjecutarAsync(
+            "CREATE INDEX \"IX_NotasHistoria_PacienteId_ProfesionalId\" ON \"NotasHistoria\" (\"PacienteId\", \"ProfesionalId\")");
     }
 
     /// <summary>
@@ -89,6 +111,22 @@ public class DatabaseInitializer(TurnosDbContext contexto)
         {
             await EjecutarAsync("PRAGMA foreign_keys=ON");
         }
+    }
+
+    public async Task<bool> ExisteTablaAsync(string tabla)
+    {
+        var conexion = contexto.Database.GetDbConnection();
+        if (conexion.State != System.Data.ConnectionState.Open)
+            await conexion.OpenAsync();
+
+        using var comando = conexion.CreateCommand();
+        comando.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name=@nombre";
+        var parametro = comando.CreateParameter();
+        parametro.ParameterName = "@nombre";
+        parametro.Value = tabla;
+        comando.Parameters.Add(parametro);
+
+        return await comando.ExecuteScalarAsync() is not null;
     }
 
     public async Task<bool> ExisteColumnaAsync(string tabla, string columna)
