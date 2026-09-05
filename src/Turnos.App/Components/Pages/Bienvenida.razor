@@ -8,6 +8,11 @@
 @inject NavigationManager Navegacion
 
 <div class="bienvenida-fondo flex h-screen flex-col items-center justify-center px-6">
+    <div class="mb-10 text-center">
+        <p class="bienvenida-eyebrow mb-3">Gestión de consultorio</p>
+        <h1 class="font-display text-4xl font-semibold tracking-tight text-[#f4ebda] md:text-5xl">Empezá tu jornada.</h1>
+        <p class="mt-3 text-sm text-[#b9a98c]">Elegí tu perfil para entrar a la agenda.</p>
+    </div>
     <div class="flex flex-wrap items-center justify-center gap-10">
         @foreach (var profesional in profesionales)
         {

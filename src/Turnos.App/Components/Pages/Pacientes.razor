@@ -4,21 +4,29 @@
 @inject IPacienteService PacienteServicio
 @inject NavigationManager Navegacion
 
-<div class="flex min-h-0 flex-1 flex-col p-6">
-    <div class="mx-auto flex w-full max-w-3xl min-h-0 flex-1 flex-col">
+<div class="flex min-h-0 flex-1 flex-col p-6 md:p-8">
+    <div class="mx-auto flex w-full max-w-4xl min-h-0 flex-1 flex-col">
 
-        <div class="mb-4 flex gap-2">
-            <input class="flex-1 rounded-lg border border-stone-300 px-3 py-2 text-sm"
+        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div>
+                <p class="page-eyebrow mb-2">Padrón compartido</p>
+                <h1 class="page-title">Pacientes</h1>
+            </div>
+            <span class="text-sm text-stone-500">@pacientes.Count registrados</span>
+        </div>
+
+        <div class="surface-card mb-4 flex gap-2 rounded-2xl p-2">
+            <input class="input-control flex-1 rounded-xl px-3 py-2.5 text-sm"
                    placeholder="Buscar por apellido, nombre o DNI"
                    @bind="texto" @bind:event="oninput" @bind:after="Buscar" />
-            <button class="rounded-lg bg-marca-600 px-4 py-2 text-sm font-medium text-white hover:bg-marca-700"
-                    @onclick="NuevoPaciente">＋ Nuevo</button>
+            <button class="primary-action rounded-xl px-4 py-2 text-sm font-semibold text-white"
+                    @onclick="NuevoPaciente">＋ Nuevo paciente</button>
         </div>
 
         @if (enEdicion is not null)
         {
-            <div class="mb-4 rounded-xl border border-marca-100 bg-white p-4 shadow-sm">
-                <h2 class="font-display mb-3 text-base font-semibold text-stone-700">
+            <div class="surface-card mb-4 rounded-2xl border-marca-100 p-5">
+                <h2 class="font-display mb-3 text-lg font-semibold tracking-tight text-stone-800">
                     @(enEdicion.Id == 0 ? "Nuevo paciente" : "Editar paciente")
                 </h2>
                 <FormPaciente Paciente="enEdicion"
@@ -27,20 +35,21 @@
             </div>
         }
 
-        <ul class="min-h-0 flex-1 divide-y divide-stone-200 overflow-auto rounded-xl border border-stone-200 bg-white">
+        <ul class="surface-card min-h-0 flex-1 divide-y divide-stone-100 overflow-auto rounded-2xl">
             @foreach (var paciente in pacientes)
             {
-                <li class="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-stone-50"
+                <li class="group flex cursor-pointer items-center gap-3 px-5 py-3.5 transition hover:bg-marca-50/50"
                     @onclick="@(() => Editar(paciente))">
-                    <span class="flex-1 text-sm font-medium text-stone-800">@paciente.NombreCompleto</span>
+                    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-stone-100 text-xs font-bold text-stone-600 group-hover:bg-white group-hover:text-marca-600">@(!string.IsNullOrWhiteSpace(paciente.NombreCompleto) ? paciente.NombreCompleto[..1] : "·")</span>
+                    <span class="flex-1 text-sm font-semibold text-stone-800">@paciente.NombreCompleto</span>
                     @if (!string.IsNullOrWhiteSpace(paciente.ObraSocial))
                     {
-                        <span class="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">
+                        <span class="rounded-lg bg-stone-100 px-2 py-1 text-xs font-medium text-stone-600">
                             @paciente.ObraSocial
                         </span>
                     }
-                    <span class="w-24 text-right text-xs text-stone-400">@paciente.Telefono</span>
-                    <button class="rounded-lg px-2 py-1 text-xs text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+                    <span class="hidden w-28 text-right text-xs text-stone-400 md:block">@paciente.Telefono</span>
+                    <button class="rounded-lg px-2 py-1 text-xs font-semibold text-stone-500 hover:bg-white hover:text-marca-700"
                             @onclick="@(() => Navegacion.NavigateTo($"/pacientes/{paciente.Id}/historia"))"
                             @onclick:stopPropagation="true">📋 Historia</button>
                 </li>

@@ -3,16 +3,17 @@
 @using Turnos.Data.Servicios
 @inject ITurnoService TurnoServicio
 
-<div class="absolute inset-y-0 right-0 z-30 flex w-80 flex-col border-l border-stone-200 bg-white shadow-xl">
+<div class="absolute inset-y-0 right-0 z-30 flex w-80 flex-col border-l border-stone-200 bg-white shadow-2xl">
 
-    <div class="flex items-start gap-2 border-b border-stone-200 p-4">
+    <div class="flex items-start gap-2 border-b border-stone-200 bg-marca-50/60 p-5">
         <div class="flex-1">
-            <p class="font-display text-base font-semibold text-stone-800">@Turno.NombreMostrado</p>
+            <p class="page-eyebrow mb-1">Detalle del turno</p>
+            <p class="font-display text-xl font-semibold tracking-tight text-stone-800">@Turno.NombreMostrado</p>
             <p class="text-xs text-stone-500">
                 @Turno.Inicio.ToString("dddd d/MM · HH:mm") – @Turno.Fin.ToString("HH:mm")
             </p>
         </div>
-        <button class="rounded-lg px-2 text-stone-400 hover:bg-stone-100" @onclick="() => AlCerrar.InvokeAsync()">✕</button>
+        <button class="rounded-xl px-2 py-1 text-stone-400 hover:bg-white" @onclick="() => AlCerrar.InvokeAsync()">✕</button>
     </div>
 
     <div class="grid grid-cols-3 gap-2 border-b border-stone-200 p-3">
@@ -28,11 +29,11 @@
     {
         <div class="flex min-h-0 flex-1 flex-col p-4">
             <span class="mb-1 text-xs font-medium text-stone-600">Nota de la sesión</span>
-            <textarea class="min-h-0 flex-1 resize-none rounded-lg border border-stone-300 p-2 text-sm"
+            <textarea class="input-control min-h-0 flex-1 resize-none rounded-xl p-3 text-sm"
                       placeholder="Qué se trabajó hoy, cómo respondió, qué sigue."
                       @bind="nota" @bind:event="oninput"></textarea>
 
-            <button class="mt-2 rounded-lg bg-marca-600 px-4 py-2 text-sm font-medium text-white hover:bg-marca-700"
+            <button class="primary-action mt-2 rounded-xl px-4 py-2 text-sm font-semibold text-white"
                     @onclick="GuardarNota">Guardar nota</button>
 
             @if (mensaje is not null)
@@ -49,7 +50,7 @@
     }
 
     <div class="border-t border-stone-200 p-3">
-        <button class="w-full rounded-lg px-4 py-2 text-sm text-stone-600 hover:bg-stone-100"
+        <button class="soft-action w-full rounded-xl px-4 py-2 text-sm font-semibold text-stone-600"
                 @onclick="() => AlEditar.InvokeAsync()">Editar fecha, hora o paciente</button>
     </div>
 </div>

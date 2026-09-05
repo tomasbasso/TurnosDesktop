@@ -4,15 +4,19 @@
 @inject IBackupService BackupServicio
 @inject EstadoApp Estado
 
-<div class="flex-1 overflow-auto p-6">
+<div class="flex-1 overflow-auto p-6 md:p-8">
     <div class="mx-auto max-w-lg space-y-6">
+        <div>
+            <p class="page-eyebrow mb-2">Preferencias</p>
+            <h1 class="page-title">Ajustes</h1>
+        </div>
 
-        <section class="rounded-xl border border-stone-200 bg-white p-4">
-            <h2 class="mb-3 text-sm font-semibold text-stone-700">Agenda</h2>
+        <section class="surface-card rounded-2xl p-5">
+            <h2 class="font-display mb-4 text-lg font-semibold tracking-tight text-stone-800">Agenda</h2>
 
             <label class="mb-3 block">
                 <span class="mb-1 block text-xs font-medium text-stone-600">Duración por defecto</span>
-                <select class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                <select class="input-control w-full rounded-xl px-3 py-2 text-sm"
                         value="@Estado.DuracionPorDefecto"
                         @onchange="@(e => Estado.DuracionPorDefecto = int.Parse(e.Value!.ToString()!))">
                     <option value="30">30 min</option>
@@ -29,14 +33,14 @@
             </label>
         </section>
 
-        <section class="rounded-xl border border-stone-200 bg-white p-4">
-            <h2 class="mb-1 text-sm font-semibold text-stone-700">Copia de seguridad</h2>
+        <section class="surface-card rounded-2xl p-5">
+            <h2 class="font-display mb-1 text-lg font-semibold tracking-tight text-stone-800">Copia de seguridad</h2>
             <p class="mb-3 text-xs text-stone-500">
                 La app hace una copia automática al abrir, una vez por día, y otra al cerrar.
                 Conserva las últimas 7.
             </p>
 
-            <button class="rounded-lg bg-marca-600 px-4 py-2 text-sm font-medium text-white hover:bg-marca-700"
+            <button class="primary-action rounded-xl px-4 py-2 text-sm font-semibold text-white"
                     @onclick="CopiarAhora">Guardar una copia ahora</button>
 
             @if (mensaje is not null)

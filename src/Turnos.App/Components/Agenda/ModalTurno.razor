@@ -3,13 +3,14 @@
 @using Turnos.Data.Servicios
 @inject ITurnoService TurnoServicio
 
-<div class="fixed inset-0 z-40 flex items-center justify-center bg-stone-900/40 p-4"
+<div class="fixed inset-0 z-40 flex items-center justify-center bg-stone-900/45 p-4 backdrop-blur-[2px]"
      @onclick="() => AlCerrar.InvokeAsync()">
 
-    <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+    <div class="w-full max-w-md rounded-3xl border border-white/70 bg-white p-6 shadow-2xl"
          @onclick:stopPropagation="true">
 
-        <h2 class="font-display mb-4 text-lg font-semibold text-stone-800">
+        <p class="page-eyebrow mb-2">Agenda</p>
+        <h2 class="font-display mb-5 text-2xl font-semibold tracking-tight text-stone-800">
             @(Turno.Id == 0 ? "Nuevo turno" : "Editar turno")
         </h2>
 
@@ -27,13 +28,13 @@
                 <label class="col-span-2 block">
                     <span class="mb-1 block text-xs font-medium text-stone-600">Fecha y hora</span>
                     <input type="datetime-local"
-                           class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                           class="input-control w-full rounded-xl px-3 py-2 text-sm"
                            value="@Turno.Inicio.ToString("yyyy-MM-ddTHH:mm")"
                            @onchange="AlCambiarInicio" />
                 </label>
                 <label class="block">
                     <span class="mb-1 block text-xs font-medium text-stone-600">Duración</span>
-                    <select class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                    <select class="input-control w-full rounded-xl px-3 py-2 text-sm"
                             value="@duracion" @onchange="AlCambiarDuracion">
                         <option value="30">30 min</option>
                         <option value="40">40 min</option>
@@ -45,7 +46,7 @@
 
             <label class="block">
                 <span class="mb-1 block text-xs font-medium text-stone-600">Observaciones</span>
-                <input class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                <input class="input-control w-full rounded-xl px-3 py-2 text-sm"
                        placeholder="viene con la orden, primera vez, etc."
                        @bind="Turno.Observaciones" />
             </label>
@@ -56,9 +57,9 @@
             }
 
             <div class="flex justify-end gap-2 pt-1">
-                <button class="rounded-lg px-4 py-2 text-sm text-stone-600 hover:bg-stone-100"
+                <button class="rounded-xl px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100"
                         @onclick="() => AlCerrar.InvokeAsync()">Cancelar</button>
-                <button class="rounded-lg bg-marca-600 px-4 py-2 text-sm font-medium text-white hover:bg-marca-700"
+                <button class="primary-action rounded-xl px-4 py-2 text-sm font-semibold text-white"
                         @onclick="Guardar" disabled="@guardando">Guardar</button>
             </div>
         </div>

@@ -3,7 +3,7 @@
 
 <div class="flex min-h-0 flex-1 overflow-auto bg-white">
 
-    <div class="sticky left-0 z-10 w-14 shrink-0 border-r border-stone-200 bg-white">
+    <div class="sticky left-0 z-20 w-14 shrink-0 border-r border-stone-200 bg-white shadow-[8px_0_18px_-18px_rgba(41,37,36,.55)]">
         <div style="height:@(CabeceraAlto)px"></div>
         @foreach (var hora in Horas())
         {
@@ -17,14 +17,14 @@
 
     @foreach (var dia in Dias())
     {
-        <div class="min-w-[110px] flex-1 border-r border-stone-200 last:border-r-0">
+        <div class="min-w-[110px] flex-1 border-r border-stone-200 last:border-r-0 @(dia == DateTime.Today ? "today-rail" : "")">
 
-            <div class="sticky top-0 z-10 flex flex-col items-center justify-center border-b border-stone-200 bg-white"
+            <div class="sticky top-0 z-10 flex flex-col items-center justify-center border-b border-stone-200 bg-white/95 backdrop-blur-sm"
                  style="height:@(CabeceraAlto)px">
                 <span class="text-[10px] uppercase tracking-wide text-stone-400">
                     @dia.ToString("ddd")
                 </span>
-                <span class="text-sm font-semibold @(dia == DateTime.Today ? "text-marca-600" : "text-stone-700")">
+                <span class="grid h-6 min-w-6 place-items-center rounded-full px-1 text-sm font-semibold @(dia == DateTime.Today ? "bg-marca-600 text-white shadow-sm" : "text-stone-700")">
                     @dia.Day
                 </span>
             </div>
@@ -46,7 +46,7 @@
 
                 @foreach (var turno in TurnosDe(dia))
                 {
-                    <div class="absolute inset-x-1 z-10 overflow-hidden rounded-md border-l-4 px-1.5 py-0.5 text-[11px] leading-tight shadow-sm @Clases(turno.Estado)"
+                    <div class="absolute inset-x-1 z-10 cursor-pointer overflow-hidden rounded-lg border-l-4 px-2 py-1 text-[11px] leading-tight shadow-sm transition hover:z-20 hover:scale-[1.015] hover:shadow-md @Clases(turno.Estado)"
                          style="top:@(Desplazamiento(TimeOnly.FromDateTime(turno.Inicio)))px; height:@(Alto(turno))px"
                          @onclick:stopPropagation="true"
                          @onclick="@(() => AlClickEnTurno.InvokeAsync(turno))">
@@ -107,7 +107,7 @@
         EstadoTurno.Atendido  => "border-l-estado-atendido bg-green-50 text-green-900",
         EstadoTurno.Ausente   => "border-l-estado-ausente bg-amber-50 text-amber-900",
         EstadoTurno.Cancelado => "border-l-estado-cancelado bg-stone-100 text-stone-400 line-through",
-        _                     => "border-l-estado-programado bg-marca-50 text-marca-700"
+        _                     => "border-l-estado-programado bg-blue-50 text-blue-900"
     };
 
     /// <summary>

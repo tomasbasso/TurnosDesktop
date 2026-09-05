@@ -4,13 +4,14 @@
 @source "../../*.razor";
 
 @theme {
-  --color-marca-50:  #fbf0ec;
-  --color-marca-100: #f0dad2;
-  --color-marca-500: #b0524a;
-  --color-marca-600: #9c443d;
-  --color-marca-700: #7d332d;
+  --color-marca-50:  #fff1ee;
+  --color-marca-100: #ffe1da;
+  --color-marca-300: #f5a898;
+  --color-marca-500: #df6b59;
+  --color-marca-600: #c95343;
+  --color-marca-700: #9f3e33;
 
-  --color-estado-programado: #b0524a;
+  --color-estado-programado: #4f86c6;
   --color-estado-atendido:   #22c55e;
   --color-estado-ausente:    #f59e0b;
   --color-estado-cancelado:  #9ca3af;
@@ -21,7 +22,131 @@
 html, body {
   height: 100%;
   overscroll-behavior: none;
+  background: #f7f5f2;
+  color: #292524;
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
 }
+
+* {
+  scrollbar-color: #d6d3d1 transparent;
+  scrollbar-width: thin;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button, [role="button"] {
+  transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, color 180ms ease;
+}
+
+button:active:not(:disabled) {
+  transform: scale(.98);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(223, 107, 89, .3);
+  outline-offset: 2px;
+}
+
+.app-shell {
+  background:
+    radial-gradient(42rem 24rem at 100% -12%, rgba(245, 168, 152, .2), transparent 70%),
+    #f7f5f2;
+}
+
+.app-topbar {
+  background: rgba(255, 255, 255, .88);
+  backdrop-filter: blur(16px);
+}
+
+.page-eyebrow {
+  color: #c95343;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.page-title {
+  font-family: Constantia, Georgia, "Times New Roman", serif;
+  font-size: clamp(1.75rem, 2.5vw, 2.35rem);
+  font-weight: 600;
+  letter-spacing: -.04em;
+  line-height: 1;
+  color: #292524;
+}
+
+.surface-card {
+  border: 1px solid rgba(231, 229, 228, .9);
+  background: rgba(255, 255, 255, .92);
+  box-shadow: 0 18px 45px -35px rgba(68, 40, 33, .45);
+}
+
+.input-control {
+  border: 1px solid #d6d3d1;
+  background: #fff;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.input-control:hover { border-color: #a8a29e; }
+.input-control:focus { border-color: #df6b59; box-shadow: 0 0 0 3px rgba(223, 107, 89, .12); outline: none; }
+
+.primary-action {
+  background: #c95343;
+  box-shadow: 0 10px 20px -14px rgba(159, 62, 51, .9);
+}
+.primary-action:hover { background: #9f3e33; box-shadow: 0 14px 26px -15px rgba(159, 62, 51, 1); transform: translateY(-1px); }
+
+.soft-action {
+  border: 1px solid #e7e5e4;
+  background: rgba(255, 255, 255, .9);
+}
+.soft-action:hover { border-color: #f5a898; background: #fff1ee; color: #9f3e33; }
+
+.today-rail {
+  background: linear-gradient(180deg, rgba(255, 241, 238, .8), rgba(255,255,255,.15));
+}
+
+/* The clinical history uses connectors between entries, rather than a border
+   that runs across the scroll container and looks detached from the cards. */
+.history-timeline {
+  padding: .25rem .75rem .5rem 2rem;
+}
+
+.history-entry::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 1.25rem;
+  left: -1.7rem;
+  width: .75rem;
+  height: .75rem;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #df6b59;
+  box-shadow: 0 0 0 2px #ffe1da;
+}
+
+.history-entry--note::before {
+  background: #a8a29e;
+  box-shadow: 0 0 0 2px #e7e5e4;
+}
+
+.history-entry::after {
+  content: "";
+  position: absolute;
+  top: 2.05rem;
+  bottom: -.9rem;
+  left: -1.36rem;
+  width: 1px;
+  background: #f5a898;
+}
+
+.history-entry:last-child::after { display: none; }
 
 #blazor-error-ui {
   display: none;
