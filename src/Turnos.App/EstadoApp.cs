@@ -26,6 +26,16 @@ public class EstadoApp
         set { Preferences.Set(nameof(MostrarDomingo), value); Cambio?.Invoke(); }
     }
 
+    /// <summary>
+    /// "dia" o "noche". No dispara Cambio: el tema lo resuelve el CSS a partir de
+    /// data-tema en &lt;html&gt;, ningún componente tiene que volver a cargar datos.
+    /// </summary>
+    public string Tema
+    {
+        get => Preferences.Get(nameof(Tema), "dia");
+        set => Preferences.Set(nameof(Tema), value);
+    }
+
     public DateTime UltimoBackupAutomatico
     {
         get => Preferences.Get(nameof(UltimoBackupAutomatico), DateTime.MinValue);

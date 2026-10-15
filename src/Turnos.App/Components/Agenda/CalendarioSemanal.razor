@@ -1,57 +1,144 @@
+@using System.Globalization
 @using Turnos.Core
 @using Turnos.Core.Entidades
+@implements IHandleEvent
+@implements IDisposable
+@inject EstadoApp Estado
 
-<div class="flex min-h-0 flex-1 overflow-auto bg-white">
+@{
+    var ahora = DateTime.Now;
+    var proximo = ProximoTurno(ahora);
+    var semanaActual = Dias().Any(d => d == DateTime.Today);
+    var ahoraVisible = semanaActual && AhoraVisible(ahora);
+    var topAhora = Desplazamiento(TimeOnly.FromDateTime(ahora));
+    var dias = Dias().ToList();
+}
 
-    <div class="sticky left-0 z-20 w-14 shrink-0 border-r border-stone-200 bg-white shadow-[8px_0_18px_-18px_rgba(41,37,36,.55)]">
-        <div style="height:@(CabeceraAlto)px"></div>
-        @foreach (var hora in Horas())
-        {
-            <div class="relative border-t border-stone-100" style="height:@(60 * Escala)px">
-                <span class="absolute -top-2 right-1 text-[10px] tabular-nums text-stone-400">
-                    @hora.ToString("HH:mm")
-                </span>
-            </div>
-        }
+<div class="cal">
+
+    <div class="canal">
+        <div class="canal-cabecera" style="height:@(CabeceraAlto)px"></div>
+        <div class="canal-cuerpo" style="height:@(Px(AltoTotal))px">
+            @foreach (var hora in Horas().Where(h => Desplazamiento(h) > 0 && !(ahoraVisible && Math.Abs(Desplazamiento(h) - topAhora) < 14)))
+            {
+                <span class="hora" style="top:@(Px(Desplazamiento(hora)))px">@hora.ToString("HH:mm")</span>
+            }
+            @if (ahoraVisible)
+            {
+                <span class="ahora-etiqueta" style="top:@(Px(topAhora))px">@ahora.ToString("HH:mm")</span>
+            }
+        </div>
     </div>
 
-    @foreach (var dia in Dias())
+    @for (var i = 0; i < dias.Count; i++)
     {
-        <div class="min-w-[110px] flex-1 border-r border-stone-200 last:border-r-0 @(dia == DateTime.Today ? "today-rail" : "")">
+        var dia = dias[i];
+        var indice = i;
+        var delDia = TurnosDe(dia).ToList();
+        var esHoy = dia == DateTime.Today;
+        var momento = esHoy ? "hoy" : dia < DateTime.Today ? "pasado" : "";
 
-            <div class="sticky top-0 z-10 flex flex-col items-center justify-center border-b border-stone-200 bg-white/95 backdrop-blur-sm"
-                 style="height:@(CabeceraAlto)px">
-                <span class="text-[10px] uppercase tracking-wide text-stone-400">
-                    @dia.ToString("ddd")
-                </span>
-                <span class="grid h-6 min-w-6 place-items-center rounded-full px-1 text-sm font-semibold @(dia == DateTime.Today ? "bg-marca-600 text-white shadow-sm" : "text-stone-700")">
-                    @dia.Day
-                </span>
+        <div class="dia @momento">
+
+            <div class="cabecera" style="height:@(CabeceraAlto)px">
+                <div>
+                    <div class="dia-nombre">@dia.ToString("ddd", Es).TrimEnd('.')</div>
+                    <div class="dia-numero">@dia.Day</div>
+                </div>
+                <div class="dia-info">
+                    @ResumenDelDia(dia, delDia, ahora)
+                    <div class="densidad"><i style="width:@(Px(Ocupacion(delDia) * 100))%"></i></div>
+                </div>
             </div>
 
-            <div class="relative" style="height:@(AltoTotal)px"
-                 @onclick="@(e => ClickEnVacio(dia, e))">
+            <div class="cuerpo" style="height:@(Px(AltoTotal))px"
+                 @onclick="@(e => ClickEnVacio(dia, e))"
+                 @onmousemove="@(e => AlMoverEnDia(dia, e))"
+                 @onmouseleave="AlSalirDelDia">
 
                 @foreach (var hora in Horas())
                 {
-                    <div class="pointer-events-none absolute inset-x-0 border-t border-stone-100"
-                         style="top:@(Desplazamiento(hora))px"></div>
+                    foreach (var (marca, clase) in new[] { (hora, "linea"), (hora.AddMinutes(30), "linea media") })
+                    {
+                        var y = Desplazamiento(marca);
+                        if (y > 0 && y < AltoTotal)
+                        {
+                            <div class="@clase" style="top:@(Px(y))px"></div>
+                        }
+                    }
                 }
 
-                @if (dia == DateTime.Today && AhoraVisible())
+                @if (esHoy && ahoraVisible)
                 {
-                    <div class="pointer-events-none absolute inset-x-0 z-20 border-t-2 border-red-500"
-                         style="top:@(Desplazamiento(TimeOnly.FromDateTime(DateTime.Now)))px"></div>
+                    <div class="velo" style="height:@(Px(topAhora))px"></div>
                 }
 
-                @foreach (var turno in TurnosDe(dia))
+                @if (ahoraVisible)
                 {
-                    <div class="absolute inset-x-1 z-10 cursor-pointer overflow-hidden rounded-lg border-l-4 px-2 py-1 text-[11px] leading-tight shadow-sm transition hover:z-20 hover:scale-[1.015] hover:shadow-md @Clases(turno.Estado)"
-                         style="top:@(Desplazamiento(TimeOnly.FromDateTime(turno.Inicio)))px; height:@(Alto(turno))px"
+                    <div class="ahora @(esHoy ? "con-punto" : "")" style="top:@(Px(topAhora))px"></div>
+                }
+
+                @if (fantasmaDia == dia && fantasmaMinutos is { } minutos)
+                {
+                    <div class="fantasma" style="top:@(Px(minutos * Escala))px; height:@(Px(Math.Max(Estado.DuracionPorDefecto * Escala, 18)))px">
+                        <b>+ @HoraInicio.AddMinutes(minutos).ToString("HH:mm")</b> Nuevo turno
+                    </div>
+                }
+
+                @foreach (var turno in delDia)
+                {
+                    var compacto = Alto(turno) < 46;
+                    <div class="turno @ClaseTurno(turno, proximo) @(compacto ? "compacto" : "")"
+                         style="top:@(Px(Desplazamiento(TimeOnly.FromDateTime(turno.Inicio)) + 1))px; height:@(Px(Alto(turno) - 3))px"
                          @onclick:stopPropagation="true"
-                         @onclick="@(() => AlClickEnTurno.InvokeAsync(turno))">
-                        <div class="font-semibold tabular-nums">@turno.Inicio.ToString("HH:mm")</div>
-                        <div class="truncate">@turno.NombreMostrado</div>
+                         @onmousemove:stopPropagation="true"
+                         @onclick="@(() => AbrirTurno(turno))"
+                         @onmouseenter="@(() => AlEntrarEnTurno(turno))"
+                         @onmouseleave="AlSalirDeTurno">
+                        @if (turno.Estado == EstadoTurno.Atendido)
+                        {
+                            <svg class="tilde" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>
+                        }
+                        <div class="nombre">@turno.NombreMostrado</div>
+                        @if (compacto)
+                        {
+                            <span class="hora-turno">@turno.Inicio.ToString("HH:mm")</span>
+                        }
+                        else
+                        {
+                            <div class="meta">@Meta(turno, proximo, ahora)</div>
+                        }
+                    </div>
+                }
+
+                @if (turnoBajoMouse is { } vistazo && vistazo.Inicio.Date == dia.Date)
+                {
+                    <div class="vistazo @(indice >= dias.Count - 2 ? "a-la-izquierda" : "")"
+                         style="top:@(Px(Math.Clamp(Desplazamiento(TimeOnly.FromDateTime(vistazo.Inicio)) - 8, 4, Math.Max(AltoTotal - 210, 4))))px">
+                        <div class="vistazo-nombre">@vistazo.NombreMostrado</div>
+                        <div class="vistazo-cuando">
+                            @vistazo.Inicio.ToString("ddd d", Es).Replace(".", "") · @vistazo.Inicio.ToString("HH:mm")–@vistazo.Fin.ToString("HH:mm") · @NombreEstado(vistazo.Estado)
+                        </div>
+                        @if (vistazo.Paciente is { } paciente)
+                        {
+                            <dl>
+                                <dt>Obra social</dt><dd>@(paciente.ObraSocial ?? "Particular")</dd>
+                                <dt>Teléfono</dt><dd>@(paciente.Telefono ?? "—")</dd>
+                            </dl>
+                            @if (!string.IsNullOrWhiteSpace(paciente.Observaciones))
+                            {
+                                <div class="vistazo-aviso">@paciente.Observaciones</div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="vistazo-sin-ficha">Sin ficha de paciente</div>
+                        }
+                        @if (NotaDelTurno(vistazo) is { } nota)
+                        {
+                            <div class="vistazo-nota">“@nota”</div>
+                        }
+                        <div class="vistazo-pie">Click para abrir el turno</div>
                     </div>
                 }
             </div>
@@ -70,9 +157,45 @@
 
     /// <summary>Pixeles por minuto. 30 min = 36 px.</summary>
     private const double Escala = 1.2;
-    private const int CabeceraAlto = 48;
+    private const int CabeceraAlto = 58;
+
+    private static readonly CultureInfo Es = new("es-AR");
 
     private double AltoTotal => (HoraFin - HoraInicio).TotalMinutes * Escala;
+
+    // El hueco "+ Nuevo turno" que sigue al mouse y la ficha rápida del turno bajo el mouse.
+    private DateTime? fantasmaDia;
+    private double? fantasmaMinutos;
+    private Turno? turnoBajoMouse;
+
+    // Mover el mouse dispara muchos eventos; solo se redibuja cuando algo visible cambió.
+    private bool redibujar;
+
+    // Refresca la línea de "ahora" y el "en N min" del próximo turno.
+    private System.Threading.Timer? reloj;
+
+    protected override void OnInitialized()
+    {
+        reloj = new System.Threading.Timer(
+            _ => InvokeAsync(StateHasChanged),
+            null,
+            TimeSpan.FromSeconds(60 - DateTime.Now.Second),
+            TimeSpan.FromMinutes(1));
+    }
+
+    public void Dispose() => reloj?.Dispose();
+
+    async Task IHandleEvent.HandleEventAsync(EventCallbackWorkItem callback, object? arg)
+    {
+        await callback.InvokeAsync(arg);
+        if (redibujar)
+        {
+            redibujar = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string Px(double valor) => valor.ToString("0.##", CultureInfo.InvariantCulture);
 
     private IEnumerable<DateTime> Dias()
     {
@@ -93,38 +216,148 @@
     private double Alto(Turno turno) =>
         Math.Max(turno.DuracionMinutos * Escala, 18);
 
-    private bool AhoraVisible()
+    private bool AhoraVisible(DateTime ahora)
     {
-        var ahora = TimeOnly.FromDateTime(DateTime.Now);
-        return ahora >= HoraInicio && ahora <= HoraFin;
+        var hora = TimeOnly.FromDateTime(ahora);
+        return hora >= HoraInicio && hora <= HoraFin;
     }
 
     private IEnumerable<Turno> TurnosDe(DateTime dia) =>
-        Turnos.Where(t => t.Inicio.Date == dia.Date && t.Estado != EstadoTurno.Cancelado);
+        Turnos.Where(t => t.Inicio.Date == dia.Date && t.Estado != EstadoTurno.Cancelado)
+              .OrderBy(t => t.Inicio);
 
-    private static string Clases(EstadoTurno estado) => estado switch
+    /// <summary>El primer turno programado de hoy que todavía no terminó.</summary>
+    private Turno? ProximoTurno(DateTime ahora) =>
+        Turnos.Where(t => t.Inicio.Date == ahora.Date && t.Estado == EstadoTurno.Programado && t.Fin > ahora)
+              .OrderBy(t => t.Inicio)
+              .FirstOrDefault();
+
+    private double Ocupacion(List<Turno> delDia)
     {
-        EstadoTurno.Atendido  => "border-l-estado-atendido bg-green-50 text-green-900",
-        EstadoTurno.Ausente   => "border-l-estado-ausente bg-amber-50 text-amber-900",
-        EstadoTurno.Cancelado => "border-l-estado-cancelado bg-stone-100 text-stone-400 line-through",
-        _                     => "border-l-estado-programado bg-blue-50 text-blue-900"
+        var total = (HoraFin - HoraInicio).TotalMinutes;
+        return total <= 0 ? 0 : Math.Min(delDia.Sum(t => t.DuracionMinutos) / total, 1);
+    }
+
+    private static string ResumenDelDia(DateTime dia, List<Turno> delDia, DateTime ahora)
+    {
+        if (delDia.Count == 0) return "Libre";
+
+        if (dia.Date == ahora.Date)
+        {
+            var pendientes = delDia.Count(t => t.Estado == EstadoTurno.Programado && t.Fin > ahora);
+            if (pendientes > 0) return pendientes == 1 ? "1 por atender" : $"{pendientes} por atender";
+        }
+
+        return delDia.Count == 1 ? "1 turno" : $"{delDia.Count} turnos";
+    }
+
+    private static string ClaseTurno(Turno turno, Turno? proximo)
+    {
+        var clase = turno.Estado switch
+        {
+            EstadoTurno.Atendido => "atendido",
+            EstadoTurno.Ausente  => "ausente",
+            _                    => "programado"
+        };
+        if (turno.PacienteId is null) clase += " sin-ficha";
+        if (proximo is not null && turno.Id == proximo.Id) clase += " proximo";
+        return clase;
+    }
+
+    private static string Meta(Turno turno, Turno? proximo, DateTime ahora)
+    {
+        var hora = turno.Inicio.ToString("HH:mm");
+
+        if (turno.Estado == EstadoTurno.Ausente) return $"{hora} · Ausente";
+
+        if (proximo is not null && turno.Id == proximo.Id)
+        {
+            var faltan = (int)Math.Ceiling((turno.Inicio - ahora).TotalMinutes);
+            if (faltan <= 0) return $"{hora} · ahora";
+            if (faltan <= 120) return $"{hora} · en {faltan} min";
+        }
+
+        if (turno.Paciente is null) return $"{hora} · Sin ficha";
+
+        return string.IsNullOrWhiteSpace(turno.Paciente.ObraSocial)
+            ? $"{hora}–{turno.Fin:HH:mm}"
+            : $"{hora} · {turno.Paciente.ObraSocial}";
+    }
+
+    private static string NombreEstado(EstadoTurno estado) => estado switch
+    {
+        EstadoTurno.Atendido  => "Atendido",
+        EstadoTurno.Ausente   => "Ausente",
+        EstadoTurno.Cancelado => "Cancelado",
+        _                     => "Programado"
     };
 
+    private static string? NotaDelTurno(Turno turno)
+    {
+        if (turno.Estado == EstadoTurno.Atendido && !string.IsNullOrWhiteSpace(turno.NotaClinica))
+            return turno.NotaClinica;
+        return string.IsNullOrWhiteSpace(turno.Observaciones) ? null : turno.Observaciones;
+    }
+
     /// <summary>
-    /// Convierte la posicion vertical del click en una hora, redondeada a 15 min.
-    /// OffsetY es relativo al div del dia, que arranca justo debajo de la cabecera.
+    /// Convierte la posicion vertical del mouse en minutos desde HoraInicio, al cuarto
+    /// de hora en que cae el puntero. OffsetY es relativo al cuerpo del dia, que arranca
+    /// justo debajo de la cabecera. Null si cae al final de la agenda.
     /// </summary>
+    private double? MinutosEn(double offsetY)
+    {
+        var minutos = Math.Floor(offsetY / Escala / 15) * 15;
+        if (minutos < 0) minutos = 0;
+        return HoraInicio.ToTimeSpan().Add(TimeSpan.FromMinutes(minutos)) >= HoraFin.ToTimeSpan() ? null : minutos;
+    }
+
     private async Task ClickEnVacio(DateTime dia, MouseEventArgs e)
     {
-        var minutosCrudos = e.OffsetY / Escala;
-        var minutos = Math.Round(minutosCrudos / 15) * 15;
+        if (MinutosEn(e.OffsetY) is not { } minutos) return;
 
         var momento = dia.Date
             .Add(HoraInicio.ToTimeSpan())
             .AddMinutes(minutos);
 
-        if (momento.TimeOfDay >= HoraFin.ToTimeSpan()) return;
-
         await AlClickEnVacio.InvokeAsync(momento);
+    }
+
+    private void AlMoverEnDia(DateTime dia, MouseEventArgs e)
+    {
+        var minutos = MinutosEn(e.OffsetY);
+        if (fantasmaDia == dia && fantasmaMinutos == minutos) return;
+
+        fantasmaDia = minutos is null ? null : dia;
+        fantasmaMinutos = minutos;
+        redibujar = true;
+    }
+
+    private void AlSalirDelDia()
+    {
+        if (fantasmaDia is null) return;
+        fantasmaDia = null;
+        fantasmaMinutos = null;
+        redibujar = true;
+    }
+
+    private async Task AbrirTurno(Turno turno)
+    {
+        turnoBajoMouse = null;
+        redibujar = true;
+        await AlClickEnTurno.InvokeAsync(turno);
+    }
+
+    private void AlEntrarEnTurno(Turno turno)
+    {
+        turnoBajoMouse = turno;
+        fantasmaDia = null;
+        fantasmaMinutos = null;
+        redibujar = true;
+    }
+
+    private void AlSalirDeTurno()
+    {
+        turnoBajoMouse = null;
+        redibujar = true;
     }
 }

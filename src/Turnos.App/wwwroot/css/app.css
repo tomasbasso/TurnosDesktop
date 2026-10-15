@@ -4,36 +4,165 @@
 @source "../../*.razor";
 
 @theme {
-  --color-marca-50:  #fff1ee;
-  --color-marca-100: #ffe1da;
-  --color-marca-300: #f5a898;
-  --color-marca-500: #df6b59;
-  --color-marca-600: #c95343;
-  --color-marca-700: #9f3e33;
+  --color-marca-50:  #fbf0ec;
+  --color-marca-100: #f6e0da;
+  --color-marca-300: #e0a79f;
+  --color-marca-500: #c4675d;
+  --color-marca-600: #b0524a;
+  --color-marca-700: #8c3d36;
 
-  --color-estado-programado: #4f86c6;
-  --color-estado-atendido:   #22c55e;
-  --color-estado-ausente:    #f59e0b;
-  --color-estado-cancelado:  #9ca3af;
+  --color-estado-programado: #a07a2c;
+  --color-estado-atendido:   #5f7a52;
+  --color-estado-ausente:    #b0524a;
+  --color-estado-cancelado:  #9a8b76;
 
   --font-display: Constantia, Georgia, "Times New Roman", serif;
 }
 
+/* ------------------------------------------------------------------
+   Temas. La paleta sale de la pantalla de bienvenida (tinta, papel,
+   vino, brasa). Tailwind v4 arma cada utilidad con var(--color-*),
+   así que remapear la escala stone alcanza para que todas las
+   pantallas cambien de tema sin tocar sus clases. El tema activo lo
+   pone EstadoApp.Tema en <html data-tema="...">.
+   ------------------------------------------------------------------ */
+:root {
+  color-scheme: light;
+
+  --fondo: #f4ede2;
+  --fondo-halo: rgba(176, 82, 74, .10);
+  --superficie: #fffdf9;
+  --superficie-campo: #fffdf9;
+  --linea: rgba(33, 28, 24, .10);
+  --linea-fuerte: rgba(33, 28, 24, .20);
+  --texto: #211c18;
+  --texto-2: #6f6253;
+  --texto-3: #9a8b76;
+  --acento: #a07a2c;
+  --acento-texto: #ffffff;
+  --vino-texto: #9a3f38;
+  --salvia: #5f7a52;
+  --sombra: rgba(68, 40, 33, .45);
+  --accion: #b0524a;
+  --accion-hover: #8c3d36;
+  --velo-modal: rgba(33, 28, 24, .45);
+
+  --cal-col: #fbf7f0;
+  --cal-col-pasado: #f3ece1;
+  --cal-cabecera: rgba(251, 247, 240, .96);
+  --cal-linea: rgba(33, 28, 24, .09);
+  --cal-linea-media: rgba(33, 28, 24, .04);
+  --cal-tarjeta: #ffffff;
+  --cal-tarjeta-borde: rgba(33, 28, 24, .14);
+  --cal-hecho: #efe6d8;
+  --cal-velo: rgba(120, 100, 80, .07);
+
+  --color-stone-50:  #faf6ef;
+  --color-stone-100: #f1e9dc;
+  --color-stone-200: #e4d9c7;
+  --color-stone-300: #d0c1a9;
+  --color-stone-400: #a8977d;
+  --color-stone-500: #86775f;
+  --color-stone-600: #6b5d4b;
+  --color-stone-700: #4f4337;
+  --color-stone-800: #352c25;
+  --color-stone-900: #241e19;
+
+  /* Insignias de estado (historia clínica, panel del turno) en tonos de la paleta. */
+  --color-green-600: #5f7a52;
+  --color-amber-500: #b8862f;
+  --color-sky-600:   #8a6a2a;
+
+  --color-green-700: #4f6a43;
+  --color-amber-50:  #f8eedb;
+  --color-amber-800: #7a5414;
+}
+
+:root[data-tema="noche"] {
+  color-scheme: dark;
+
+  --fondo: #1c1815;
+  --fondo-halo: rgba(176, 82, 74, .16);
+  --superficie: #2b2420;
+  --superficie-campo: #241e1a;
+  --linea: rgba(244, 235, 218, .09);
+  --linea-fuerte: rgba(244, 235, 218, .18);
+  --texto: #f4ebda;
+  --texto-2: #b9a98c;
+  --texto-3: #8a7c68;
+  --acento: #caa25a;
+  --acento-texto: #211c18;
+  --vino-texto: #d98c83;
+  --salvia: #9db08f;
+  --sombra: rgba(0, 0, 0, .7);
+  --accion: #b0524a;
+  --accion-hover: #c4675d;
+  --velo-modal: rgba(8, 6, 5, .6);
+
+  --cal-col: #231e1a;
+  --cal-col-pasado: #1d1916;
+  --cal-cabecera: rgba(33, 28, 24, .96);
+  --cal-linea: rgba(244, 235, 218, .06);
+  --cal-linea-media: rgba(244, 235, 218, .03);
+  --cal-tarjeta: #352c27;
+  --cal-tarjeta-borde: rgba(202, 162, 90, .22);
+  --cal-hecho: #28221e;
+  --cal-velo: rgba(12, 9, 7, .32);
+
+  --color-stone-50:  #26201c;
+  --color-stone-100: #322a25;
+  --color-stone-200: #3f352f;
+  --color-stone-300: #54493f;
+  --color-stone-400: #8a7c68;
+  --color-stone-500: #a39480;
+  --color-stone-600: #b9a98c;
+  --color-stone-700: #d6c9b2;
+  --color-stone-800: #ebe0cc;
+  --color-stone-900: #f4ebda;
+
+  --color-marca-50:  #3a2522;
+  --color-marca-100: #4a2c28;
+  --color-marca-300: #8a4a42;
+  --color-marca-500: #c9675c;
+  --color-marca-600: #b8564d;
+  --color-marca-700: #e0a097;
+
+  --color-green-700: #9db08f;
+  --color-amber-50:  #3a2f1e;
+  --color-amber-800: #e3c48a;
+}
+
+/* text-white tiene que seguir siendo blanco sobre los botones vino, por
+   eso --color-white no se remapea: se corrigen las superficies blancas. */
+:root[data-tema="noche"] .bg-white,
+:root[data-tema="noche"] .hover\:bg-white:hover,
+:root[data-tema="noche"] .group:hover .group-hover\:bg-white { background-color: var(--superficie); }
+:root[data-tema="noche"] .bg-white\/80 { background-color: color-mix(in oklab, var(--superficie) 80%, transparent); }
+:root[data-tema="noche"] .bg-white\/95 { background-color: color-mix(in oklab, var(--superficie) 95%, transparent); }
+:root[data-tema="noche"] .border-white\/70 { border-color: var(--linea); }
+:root[data-tema="noche"] .bg-stone-500 { background-color: #6b5d4b; }
+:root[data-tema="noche"] .bg-stone-900\/45 { background-color: var(--velo-modal); }
+
 html, body {
   height: 100%;
   overscroll-behavior: none;
-  background: #f7f5f2;
-  color: #292524;
+  background: var(--fondo);
+  color: var(--texto);
   font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
 }
 
 * {
-  scrollbar-color: #d6d3d1 transparent;
+  scrollbar-color: var(--linea-fuerte) transparent;
   scrollbar-width: thin;
 }
 
 button, input, select, textarea {
   font: inherit;
+}
+
+select option {
+  background: var(--superficie);
+  color: var(--texto);
 }
 
 button, [role="button"] {
@@ -48,23 +177,23 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgba(223, 107, 89, .3);
+  outline: 3px solid color-mix(in oklab, var(--color-marca-500) 35%, transparent);
   outline-offset: 2px;
 }
 
 .app-shell {
   background:
-    radial-gradient(42rem 24rem at 100% -12%, rgba(245, 168, 152, .2), transparent 70%),
-    #f7f5f2;
+    radial-gradient(42rem 24rem at 100% -12%, var(--fondo-halo), transparent 70%),
+    var(--fondo);
 }
 
 .app-topbar {
-  background: rgba(255, 255, 255, .88);
+  background: color-mix(in oklab, var(--superficie) 88%, transparent);
   backdrop-filter: blur(16px);
 }
 
 .page-eyebrow {
-  color: #c95343;
+  color: var(--vino-texto);
   font-size: .68rem;
   font-weight: 700;
   letter-spacing: .16em;
@@ -77,39 +206,36 @@ textarea:focus-visible {
   font-weight: 600;
   letter-spacing: -.04em;
   line-height: 1;
-  color: #292524;
+  color: var(--texto);
 }
 
 .surface-card {
-  border: 1px solid rgba(231, 229, 228, .9);
-  background: rgba(255, 255, 255, .92);
-  box-shadow: 0 18px 45px -35px rgba(68, 40, 33, .45);
+  border: 1px solid var(--linea);
+  background: color-mix(in oklab, var(--superficie) 92%, transparent);
+  box-shadow: 0 18px 45px -35px var(--sombra);
 }
 
 .input-control {
-  border: 1px solid #d6d3d1;
-  background: #fff;
+  border: 1px solid var(--linea-fuerte);
+  background: var(--superficie-campo);
+  color: var(--texto);
   transition: border-color 180ms ease, box-shadow 180ms ease;
 }
 
-.input-control:hover { border-color: #a8a29e; }
-.input-control:focus { border-color: #df6b59; box-shadow: 0 0 0 3px rgba(223, 107, 89, .12); outline: none; }
+.input-control:hover { border-color: var(--texto-3); }
+.input-control:focus { border-color: var(--color-marca-500); box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-marca-500) 15%, transparent); outline: none; }
 
 .primary-action {
-  background: #c95343;
-  box-shadow: 0 10px 20px -14px rgba(159, 62, 51, .9);
+  background: var(--accion);
+  box-shadow: 0 10px 20px -14px var(--sombra);
 }
-.primary-action:hover { background: #9f3e33; box-shadow: 0 14px 26px -15px rgba(159, 62, 51, 1); transform: translateY(-1px); }
+.primary-action:hover { background: var(--accion-hover); box-shadow: 0 14px 26px -15px var(--sombra); transform: translateY(-1px); }
 
 .soft-action {
-  border: 1px solid #e7e5e4;
-  background: rgba(255, 255, 255, .9);
+  border: 1px solid var(--linea);
+  background: color-mix(in oklab, var(--superficie) 90%, transparent);
 }
-.soft-action:hover { border-color: #f5a898; background: #fff1ee; color: #9f3e33; }
-
-.today-rail {
-  background: linear-gradient(180deg, rgba(255, 241, 238, .8), rgba(255,255,255,.15));
-}
+.soft-action:hover { border-color: var(--color-marca-300); background: var(--color-marca-50); color: var(--color-marca-700); }
 
 /* The clinical history uses connectors between entries, rather than a border
    that runs across the scroll container and looks detached from the cards. */
@@ -125,15 +251,15 @@ textarea:focus-visible {
   left: -1.7rem;
   width: .75rem;
   height: .75rem;
-  border: 2px solid #fff;
+  border: 2px solid var(--superficie);
   border-radius: 999px;
-  background: #df6b59;
-  box-shadow: 0 0 0 2px #ffe1da;
+  background: var(--color-marca-500);
+  box-shadow: 0 0 0 2px var(--color-marca-100);
 }
 
 .history-entry--note::before {
-  background: #a8a29e;
-  box-shadow: 0 0 0 2px #e7e5e4;
+  background: var(--color-stone-400);
+  box-shadow: 0 0 0 2px var(--color-stone-200);
 }
 
 .history-entry::after {
@@ -143,7 +269,7 @@ textarea:focus-visible {
   bottom: -.9rem;
   left: -1.36rem;
   width: 1px;
-  background: #f5a898;
+  background: var(--color-marca-300);
 }
 
 .history-entry:last-child::after { display: none; }
@@ -155,6 +281,7 @@ textarea:focus-visible {
   bottom: 0;
   z-index: 1000;
   background: #fef9c3;
+  color: #211c18;
   padding: 0.75rem 1.25rem;
   box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
 }

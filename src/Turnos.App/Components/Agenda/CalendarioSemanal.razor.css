@@ -1,0 +1,384 @@
+.cal {
+    display: flex;
+    /* Sin esto cada columna mide lo que el área visible y su borde se corta al scrollear. */
+    align-items: flex-start;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    background: var(--cal-col);
+    color: var(--texto);
+}
+
+/* ---- Canal de horas (columna fija a la izquierda) ---- */
+
+.canal {
+    position: sticky;
+    left: 0;
+    z-index: 30;
+    width: 64px;
+    flex-shrink: 0;
+    background: var(--cal-cabecera);
+    border-right: 1px solid var(--cal-linea);
+}
+
+.canal-cabecera {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--cal-cabecera);
+    border-bottom: 1px solid var(--cal-linea);
+}
+
+.canal-cuerpo {
+    position: relative;
+}
+
+.hora {
+    position: absolute;
+    right: 10px;
+    transform: translateY(-50%);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--texto-3);
+}
+
+.ahora-etiqueta {
+    position: absolute;
+    left: 6px;
+    z-index: 3;
+    transform: translateY(-50%);
+    border-radius: 5px;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    background: var(--acento);
+    color: var(--acento-texto);
+}
+
+/* ---- Columnas de días ---- */
+
+.dia {
+    position: relative;
+    min-width: 120px;
+    flex: 1;
+    border-left: 1px solid var(--cal-linea);
+}
+
+.dia.pasado .cuerpo { background: var(--cal-col-pasado); }
+.dia.hoy .cuerpo { background: color-mix(in oklab, var(--cal-col) 94%, var(--acento)); }
+
+.cabecera {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 0 12px 10px;
+    background: var(--cal-cabecera);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--cal-linea);
+}
+
+.dia-nombre {
+    font-size: 10px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--texto-3);
+}
+
+.dia-numero {
+    font-family: var(--font-display);
+    font-size: 26px;
+    line-height: 1;
+    font-variant-numeric: lining-nums;
+}
+
+.dia.pasado .dia-numero { color: var(--texto-3); }
+.dia.hoy .dia-numero { color: var(--acento); }
+
+.dia-info {
+    margin-left: auto;
+    text-align: right;
+    font-size: 11px;
+    color: var(--texto-2);
+    white-space: nowrap;
+}
+
+.densidad {
+    width: 54px;
+    height: 3px;
+    margin: 5px 0 0 auto;
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--cal-linea);
+}
+
+.densidad i {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--acento);
+}
+
+.dia.pasado .densidad i { background: var(--texto-3); }
+
+.cuerpo {
+    position: relative;
+    cursor: cell;
+}
+
+.linea {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px solid var(--cal-linea);
+    pointer-events: none;
+}
+
+.linea.media { border-top-color: var(--cal-linea-media); }
+
+/* Lo que ya pasó de hoy queda apenas apagado. */
+.velo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--cal-velo);
+    pointer-events: none;
+}
+
+.ahora {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 15;
+    border-top: 1.5px solid var(--acento);
+    pointer-events: none;
+}
+
+.ahora.con-punto::before {
+    content: "";
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--acento);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--acento) 25%, transparent);
+}
+
+.fantasma {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    z-index: 5;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 5px 9px;
+    border: 1.5px dashed var(--acento);
+    border-radius: 9px;
+    background: color-mix(in oklab, var(--acento) 7%, transparent);
+    font-size: 12px;
+    color: var(--acento);
+    pointer-events: none;
+}
+
+.fantasma b { font-variant-numeric: tabular-nums; }
+
+/* ---- Tarjetas de turno ---- */
+
+.turno {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    z-index: 10;
+    overflow: hidden;
+    padding: 6px 9px;
+    border: 1px solid var(--cal-tarjeta-borde);
+    border-radius: 9px;
+    background: var(--cal-tarjeta);
+    cursor: pointer;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.turno:hover {
+    z-index: 12;
+    transform: translateY(-2px);
+    border-color: var(--acento);
+    box-shadow: 0 14px 24px -14px var(--sombra);
+}
+
+.turno.compacto {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 9px;
+}
+
+.nombre {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.15;
+}
+
+.compacto .nombre {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+}
+
+.meta,
+.hora-turno {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--texto-2);
+}
+
+.hora-turno { margin-top: 0; flex-shrink: 0; }
+
+.turno.atendido {
+    border-color: transparent;
+    background: var(--cal-hecho);
+}
+
+.turno.atendido .nombre {
+    font-weight: 400;
+    color: var(--texto-2);
+    padding-right: 14px;
+}
+
+.tilde {
+    position: absolute;
+    top: 6px;
+    right: 7px;
+    color: var(--salvia);
+}
+
+.compacto .tilde { position: static; flex-shrink: 0; order: 3; }
+.turno.atendido.compacto .nombre { padding-right: 0; }
+
+.turno.ausente {
+    border: 1px dashed color-mix(in oklab, var(--vino-texto) 70%, transparent);
+    background: transparent;
+}
+
+.turno.ausente .nombre {
+    font-weight: 400;
+    color: var(--vino-texto);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+}
+
+.turno.sin-ficha { border-style: dashed; border-color: var(--texto-3); }
+.turno.sin-ficha .nombre { font-style: italic; }
+
+.turno.proximo {
+    border: 1px solid var(--acento);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--acento) 18%, transparent);
+}
+
+.turno.proximo .meta { color: var(--acento); font-weight: 600; }
+
+/* ---- Vistazo: la ficha rápida al pasar el mouse por un turno ---- */
+
+.vistazo {
+    position: absolute;
+    left: calc(100% + 8px);
+    z-index: 40;
+    width: 250px;
+    padding: 14px 16px;
+    border: 1px solid var(--cal-tarjeta-borde);
+    border-radius: 12px;
+    background: var(--superficie);
+    box-shadow: 0 24px 40px -18px var(--sombra);
+    pointer-events: none;
+    animation: vistazo-aparece .16s ease .12s both;
+}
+
+.vistazo.a-la-izquierda {
+    left: auto;
+    right: calc(100% + 8px);
+}
+
+@keyframes vistazo-aparece {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+}
+
+.vistazo-nombre {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.vistazo-cuando {
+    margin: 3px 0 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--linea);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--texto-2);
+}
+
+.vistazo dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    margin: 0;
+    font-size: 12px;
+}
+
+.vistazo dt { color: var(--texto-3); }
+.vistazo dd { margin: 0; }
+
+.vistazo-aviso {
+    margin-top: 10px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: var(--color-marca-50);
+    color: var(--color-marca-700);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.vistazo-sin-ficha {
+    font-size: 12px;
+    font-style: italic;
+    color: var(--texto-2);
+}
+
+.vistazo-nota {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-top: 10px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-style: italic;
+    line-height: 1.45;
+    color: var(--texto-2);
+}
+
+.vistazo-pie {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--texto-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .turno, .vistazo { transition: none; animation: none; }
+}

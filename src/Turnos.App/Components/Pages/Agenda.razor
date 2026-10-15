@@ -1,6 +1,7 @@
 @page "/agenda"
 @implements IDisposable
 @using Microsoft.EntityFrameworkCore
+@using Turnos.Core
 @using Turnos.Core.Entidades
 @using Turnos.Data
 @using Turnos.Data.Servicios
@@ -18,11 +19,14 @@
         </div>
         <div class="ml-2">
             <p class="page-eyebrow text-[9px]">Agenda semanal</p>
-            <span class="font-display text-lg font-semibold tracking-tight text-stone-800">@Rotulo()</span>
+            <span class="font-display text-2xl font-semibold tracking-tight text-stone-800">@Rotulo()</span>
         </div>
-        <div class="ml-auto hidden items-center gap-2 text-xs text-stone-500 sm:flex">
-            <span class="h-2 w-2 rounded-full bg-[#4f86c6]"></span> Programado
-            <span class="ml-2 h-2 w-2 rounded-full bg-green-500"></span> Atendido
+        <div class="ml-auto hidden items-center gap-4 text-xs text-stone-500 sm:flex">
+            <span><b class="font-semibold tabular-nums text-stone-800">@TurnosActivos.Count()</b> @(TurnosActivos.Count() == 1 ? "turno" : "turnos") esta semana</span>
+            @if (Ausentes > 0)
+            {
+                <span><b class="font-semibold tabular-nums text-stone-800">@Ausentes</b> @(Ausentes == 1 ? "ausente" : "ausentes")</span>
+            }
         </div>
     </div>
 
@@ -104,11 +108,19 @@
     private async Task SemanaSiguiente() { lunes = lunes.AddDays(7);  await CargarSemana(); }
     private async Task IrAHoy()          { lunes = LunesDe(DateOnly.FromDateTime(DateTime.Today)); await CargarSemana(); }
 
+    private static readonly System.Globalization.CultureInfo Es = new("es-AR");
+
     private string Rotulo()
     {
         var fin = lunes.AddDays(Estado.MostrarDomingo ? 6 : 5);
-        return $"{lunes:dd/MM} – {fin:dd/MM/yyyy}";
+        return lunes.Month == fin.Month
+            ? $"{lunes.Day} – {fin.ToString("d 'de' MMMM yyyy", Es)}"
+            : $"{lunes.ToString("d 'de' MMM", Es).TrimEnd('.')} – {fin.ToString("d 'de' MMM yyyy", Es).Replace(".", "")}";
     }
+
+    private IEnumerable<Turno> TurnosActivos => turnos.Where(t => t.Estado != EstadoTurno.Cancelado);
+
+    private int Ausentes => turnos.Count(t => t.Estado == EstadoTurno.Ausente);
 
     private Turno? turnoEnEdicion;
 
