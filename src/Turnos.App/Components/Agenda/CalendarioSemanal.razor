@@ -80,7 +80,7 @@
 
                 @if (fantasmaDia == dia && fantasmaMinutos is { } minutos)
                 {
-                    <div class="fantasma" style="top:@(Px(minutos * Escala))px; height:@(Px(Math.Max(Estado.DuracionPorDefecto * Escala, 18)))px">
+                    <div class="fantasma" style="top:@(Px(minutos * Escala + 1))px; height:@(Px(AltoFantasma(dia, minutos)))px">
                         <b>+ @HoraInicio.AddMinutes(minutos).ToString("HH:mm")</b> Nuevo turno
                     </div>
                 }
@@ -267,8 +267,9 @@
     private static string Meta(Turno turno, Turno? proximo, DateTime ahora)
     {
         var hora = turno.Inicio.ToString("HH:mm");
+        var rango = $"{hora}–{turno.Fin:HH:mm}";
 
-        if (turno.Estado == EstadoTurno.Ausente) return $"{hora} · Ausente";
+        if (turno.Estado == EstadoTurno.Ausente) return $"{rango} · Ausente";
 
         if (proximo is not null && turno.Id == proximo.Id)
         {
@@ -277,11 +278,11 @@
             if (faltan <= 120) return $"{hora} · en {faltan} min";
         }
 
-        if (turno.Paciente is null) return $"{hora} · Sin ficha";
+        if (turno.Paciente is null) return $"{rango} · Sin ficha";
 
         return string.IsNullOrWhiteSpace(turno.Paciente.ObraSocial)
-            ? $"{hora}–{turno.Fin:HH:mm}"
-            : $"{hora} · {turno.Paciente.ObraSocial}";
+            ? rango
+            : $"{rango} · {turno.Paciente.ObraSocial}";
     }
 
     private static string NombreEstado(EstadoTurno estado) => estado switch
@@ -311,20 +312,50 @@
         return HoraInicio.ToTimeSpan().Add(TimeSpan.FromMinutes(minutos)) >= HoraFin.ToTimeSpan() ? null : minutos;
     }
 
+    private DateTime MomentoDe(DateTime dia, double minutos) =>
+        dia.Date.Add(HoraInicio.ToTimeSpan()).AddMinutes(minutos);
+
+    /// <summary>
+    /// El turno que ocupa ese momento, si hay uno. El margen a los costados de cada
+    /// tarjeta deja ver el cuerpo del día, así que el mouse puede caer "en vacío"
+    /// dentro del horario de un turno: ahí no hay lugar para uno nuevo.
+    /// </summary>
+    private Turno? TurnoEn(DateTime dia, double minutos)
+    {
+        var momento = MomentoDe(dia, minutos);
+        return TurnosDe(dia).FirstOrDefault(t => t.Inicio <= momento && momento < t.Fin);
+    }
+
+    /// <summary>Alto del hueco "+ Nuevo turno": la duración por defecto, recortada si antes empieza otro turno.</summary>
+    private double AltoFantasma(DateTime dia, double minutos)
+    {
+        var desde = MomentoDe(dia, minutos);
+        var duracion = (double)Estado.DuracionPorDefecto;
+
+        var siguiente = TurnosDe(dia).FirstOrDefault(t => t.Inicio > desde);
+        if (siguiente is not null)
+            duracion = Math.Min(duracion, (siguiente.Inicio - desde).TotalMinutes);
+
+        return Math.Max(duracion * Escala - 3, 18);
+    }
+
     private async Task ClickEnVacio(DateTime dia, MouseEventArgs e)
     {
         if (MinutosEn(e.OffsetY) is not { } minutos) return;
 
-        var momento = dia.Date
-            .Add(HoraInicio.ToTimeSpan())
-            .AddMinutes(minutos);
+        if (TurnoEn(dia, minutos) is { } ocupado)
+        {
+            await AbrirTurno(ocupado);
+            return;
+        }
 
-        await AlClickEnVacio.InvokeAsync(momento);
+        await AlClickEnVacio.InvokeAsync(MomentoDe(dia, minutos));
     }
 
     private void AlMoverEnDia(DateTime dia, MouseEventArgs e)
     {
         var minutos = MinutosEn(e.OffsetY);
+        if (minutos is { } m && TurnoEn(dia, m) is not null) minutos = null;
         if (fantasmaDia == dia && fantasmaMinutos == minutos) return;
 
         fantasmaDia = minutos is null ? null : dia;
