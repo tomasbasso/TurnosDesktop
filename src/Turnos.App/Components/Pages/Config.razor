@@ -3,6 +3,7 @@
 @using Turnos.Data.Servicios
 @inject IBackupService BackupServicio
 @inject EstadoApp Estado
+@inject NavigationManager Navegacion
 
 <div class="flex-1 overflow-auto p-6 md:p-8">
     <div class="mx-auto max-w-lg space-y-6">
@@ -48,11 +49,133 @@
                 <p class="mt-3 break-all rounded-lg bg-stone-50 px-3 py-2 text-xs text-stone-600">@mensaje</p>
             }
         </section>
+
+        <section class="surface-card rounded-2xl p-5">
+            <h2 class="font-display mb-1 text-lg font-semibold tracking-tight text-stone-800">Restaurar una copia</h2>
+            <p class="mb-3 text-xs text-stone-500">
+                Para pasar los datos desde otra computadora o volver a una copia anterior.
+                Reemplaza todos los datos actuales; antes de hacerlo, la app guarda lo que hay ahora.
+            </p>
+
+            @if (restaurada)
+            {
+                <p class="mb-3 break-all rounded-lg bg-stone-50 px-3 py-2 text-xs text-stone-600">@mensajeRestaurar</p>
+                <button class="primary-action rounded-xl px-4 py-2 text-sm font-semibold text-white"
+                        @onclick="EntrarConLosDatos">Entrar con los datos restaurados</button>
+            }
+            else if (resumen is not null)
+            {
+                <div class="rounded-xl border border-stone-200 bg-stone-50 p-4">
+                    <p class="text-sm font-semibold text-stone-800">@Path.GetFileName(archivoElegido)</p>
+                    <p class="mt-1 text-xs text-stone-500">Guardada el @resumen.Fecha.ToString("d 'de' MMMM yyyy, HH:mm", Es)</p>
+                    <p class="mt-2 text-sm text-stone-700">
+                        Trae @Plural(resumen.Pacientes, "paciente", "pacientes"),
+                        @Plural(resumen.Turnos, "turno", "turnos") y
+                        @Plural(resumen.Profesionales, "profesional", "profesionales").
+                    </p>
+                    <p class="mt-3 text-xs font-medium text-marca-700">
+                        Los datos que hay ahora en esta computadora se van a reemplazar por los de la copia.
+                    </p>
+                    <div class="mt-4 flex gap-2">
+                        <button class="primary-action rounded-xl px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                                disabled="@restaurando" @onclick="Restaurar">
+                            @(restaurando ? "Restaurando…" : "Restaurar esta copia")
+                        </button>
+                        <button class="soft-action rounded-xl px-4 py-2 text-sm font-semibold text-stone-600"
+                                disabled="@restaurando" @onclick="Descartar">Cancelar</button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <button class="soft-action rounded-xl px-4 py-2 text-sm font-semibold text-stone-700"
+                        @onclick="ElegirCopia">Elegir una copia…</button>
+            }
+
+            @if (errorRestaurar is not null)
+            {
+                <p class="mt-3 break-all rounded-lg bg-marca-50 px-3 py-2 text-xs text-marca-700">@errorRestaurar</p>
+            }
+        </section>
     </div>
 </div>
 
 @code {
+    private static readonly System.Globalization.CultureInfo Es = new("es-AR");
+
     private string? mensaje;
+
+    private string? archivoElegido;
+    private ResumenCopia? resumen;
+    private bool restaurando;
+    private bool restaurada;
+    private string? mensajeRestaurar;
+    private string? errorRestaurar;
+
+    private static string Plural(int cantidad, string singular, string plural) =>
+        $"{cantidad} {(cantidad == 1 ? singular : plural)}";
+
+    private async Task ElegirCopia()
+    {
+        errorRestaurar = null;
+
+        var tipos = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+        {
+            [DevicePlatform.WinUI] = [".db"],
+            [DevicePlatform.Android] = ["application/octet-stream", "application/x-sqlite3"]
+        });
+
+        var elegido = await FilePicker.Default.PickAsync(new PickOptions
+        {
+            PickerTitle = "Elegí la copia de seguridad (turnos-….db)",
+            FileTypes = tipos
+        });
+        if (elegido is null) return;
+
+        var inspeccion = await BackupServicio.InspeccionarAsync(elegido.FullPath);
+        if (!inspeccion.Success)
+        {
+            errorRestaurar = inspeccion.Message;
+            return;
+        }
+
+        archivoElegido = elegido.FullPath;
+        resumen = inspeccion.Data;
+    }
+
+    private void Descartar()
+    {
+        archivoElegido = null;
+        resumen = null;
+        errorRestaurar = null;
+    }
+
+    private async Task Restaurar()
+    {
+        restaurando = true;
+        errorRestaurar = null;
+
+        // Fuera de "backups": esa carpeta se purga y el respaldo previo a una
+        // restauración tiene que sobrevivir.
+        var carpeta = Path.Combine(FileSystem.AppDataDirectory, "antes-de-restaurar");
+        var resultado = await BackupServicio.RestaurarAsync(archivoElegido!, carpeta);
+
+        restaurando = false;
+        if (!resultado.Success)
+        {
+            errorRestaurar = resultado.Message;
+            return;
+        }
+
+        restaurada = true;
+        mensajeRestaurar = resultado.Message;
+    }
+
+    /// <summary>
+    /// Recarga la app desde la bienvenida: el profesional elegido y las pantallas
+    /// abiertas eran de los datos anteriores.
+    /// </summary>
+    private void EntrarConLosDatos() => Navegacion.NavigateTo("/", forceLoad: true);
 
     private async Task CopiarAhora()
     {
